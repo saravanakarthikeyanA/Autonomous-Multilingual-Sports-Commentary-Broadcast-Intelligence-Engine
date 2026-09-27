@@ -20,8 +20,5 @@ COPY . .
 # Expose Streamlit UI port & Prometheus metrics port
 EXPOSE 8501 8000
 
-# Healthcheck
-HEALTHCHECK CMD curl --fail http://localhost:8501/_stcore/health || exit 1
-
-# Launch Streamlit Application
-CMD ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+# Launch Streamlit Application (dynamically adapts to $PORT on Render, defaults to 8501 on AWS/Local)
+CMD ["sh", "-c", "streamlit run app.py --server.port=${PORT:-8501} --server.address=0.0.0.0 --server.enableCORS=false --server.enableXsrfProtection=false"]
