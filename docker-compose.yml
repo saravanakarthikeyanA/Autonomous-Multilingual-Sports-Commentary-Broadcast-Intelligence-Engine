@@ -1,0 +1,49 @@
+services:
+  app:
+    build: .
+    container_name: cricket_commentary_app
+    ports:
+      - "8501:8501"
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - GROQ_MODEL=qwen/qwen3.8-27b
+      - GROQ_FAST_MODEL=qwen/qwen3.8-27b
+      - HF_TOKEN=${HF_TOKEN:-}
+      - DB_PATH=data/match_stats.db
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:v2.45.0
+    container_name: commentary_prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:10.0.3
+    container_name: commentary_grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - ./monitoring/grafana_provisioning:/etc/grafana/provisioning
+      - ./monitoring/grafana_dashboard.json:/var/lib/grafana/dashboards/dashboard.json
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.15.0
+    container_name: commentary_mlflow
+    ports:
+      - "5001:5000"
+    command: mlflow server --backend-store-uri sqlite:///mlflow.db --default-artifact-root /mlflow/artifacts --host 0.0.0.0 --port 5000
+    volumes:
+      - ./data/mlflow:/mlflow
+    restart: unless-stopped

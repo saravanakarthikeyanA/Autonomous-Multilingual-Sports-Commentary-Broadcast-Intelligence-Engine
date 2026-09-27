@@ -1,0 +1,83 @@
+# ==========================================
+# 🛑 CRITICAL SECURITY: Secrets & Credentials
+# ==========================================
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+*.cer
+*.crt
+.streamlit/secrets.toml
+aws_credentials
+id_rsa*
+
+# ==========================================
+# 🐍 Python Caches & Environments
+# ==========================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ==========================================
+# 🗄️ Database & MLflow State Artifacts
+# ==========================================
+*.db
+*.sqlite
+*.sqlite3
+mlflow.db
+mlruns/
+data/mlflow/
+data/match_stats.db
+data/*.parquet
+
+# ==========================================
+# 🎵 Temporary Audio & Video Bloat
+# ==========================================
+*.mp3
+*.wav
+*.m4a
+*.flac
+*.mp4
+!data/video_sync.json
+data/audio_cache/*
+!data/audio_cache/.gitkeep
+static/audio/*
+!static/audio/.gitkeep
+
+# ==========================================
+# 💻 OS & IDE Specific
+# ==========================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+.idea/
+.vscode/
+*.swp

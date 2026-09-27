@@ -1,0 +1,227 @@
+{
+  "match_id": "1276906",
+  "video_source": "s3://cricsheet-data/videos/matchday.mp4",
+  "innings": [
+    {
+      "inning": 1,
+      "overs": [
+        {
+          "over": 18,
+          "deliveries": [
+            {
+              "ball": 1,
+              "delivery_type": "legal",
+              "is_legal": true,
+              "video_time_sec": 30
+            },
+            {
+              "ball": 2,
+              "delivery_type": "legal",
+              "is_legal": true,
+              "video_time_sec": 70
+            },
+            {
+              "ball": 3,
+              "delivery_type": "legal",
+              "is_legal": true,
+              "video_time_sec": 105
+            },
+            {
+              "ball": 4,
+              "delivery_type": "legal",
+              "is_legal": true,
+              "video_time_sec": 140
+            },
+            {
+              "ball": 5,
+              "delivery_type": "legal",
+              "is_legal": true,
+              "video_time_sec": 180
+            },
+            {
+              "ball": 6,
+              "delivery_type": "legal",
+              "is_legal": true,
+              "video_time_sec": 270
+            }
+          ]
+        },
+        {
+          "over": 19,
+          "deliveries": [
+            {
+              "ball": 1,
+              "delivery_type": "wide",
+              "is_legal": false,
+              "video_time_sec": 345
+            },
+            {
+              "ball": 1,
+              "delivery_type": "legal",
+              "is_legal": true,
+              "video_time_sec": 375
+            },
+            {
+              "ball": 2,
+              "delivery_type": "legal",
+              "is_legal": true,
+              "video_time_sec": 467
+            },
+            {
+              "ball": 3,
+              "delivery_type": "legal",
+              "is_legal": true,
+              "video_time_sec": 510
+            },
+            {
+              "ball": 4,
+              "delivery_type": "legal",
+              "is_legal": true,
+              "video_time_sec": 560
+            },
+            {
+              "ball": 5,
+              "delivery_type": "legal",
+              "is_legal": true,
+              "video_time_sec": 609
+            },
+            {
+              "ball": 6,
+              "delivery_type": "legal",
+              "is_legal": true,
+              "video_time_sec": 648
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "inning": 2,
+      "overs": [
+        {
+          "over": 0,
+          "deliveries": [
+            {
+              "ball": 1,
+              "delivery_type": "legal",
+              "is_legal": true,
+              "video_time_sec": 668
+            },
+            {
+              "ball": 2,
+              "delivery_type": "legal",
+              "is_legal": true,
+              "video_time_sec": 710
+            },
+            {
+              "ball": 3,
+              "delivery_type": "legal",
+              "is_legal": true,
+              "video_time_sec": 750
+            },
+            {
+              "ball": 4,
+              "delivery_type": "legal",
+              "is_legal": true,
+              "video_time_sec": 783
+            },
+            {
+              "ball": 5,
+              "delivery_type": "legal",
+              "is_legal": true,
+              "video_time_sec": 815
+            },
+            {
+              "ball": 6,
+              "delivery_type": "legal",
+              "is_legal": true,
+              "video_time_sec": 852
+            }
+          ]
+        },
+        {
+          "over": 1,
+          "deliveries": [
+            {
+              "ball": 1,
+              "delivery_type": "legal",
+              "is_legal": true,
+              "video_time_sec": 917
+            },
+            {
+              "ball": 2,
+              "delivery_type": "legal",
+              "is_legal": true,
+              "video_time_sec": 1055
+            },
+            {
+              "ball": 3,
+              "delivery_type": "legal",
+              "is_legal": true,
+              "video_time_sec": 1082
+            },
+            {
+              "ball": 4,
+              "delivery_type": "legal",
+              "is_legal": true,
+              "video_time_sec": 1115
+            },
+            {
+              "ball": 5,
+              "delivery_type": "legal",
+              "is_legal": true,
+              "video_time_sec": 1144
+            },
+            {
+              "ball": 6,
+              "delivery_type": "legal",
+              "is_legal": true,
+              "video_time_sec": 1188
+            }
+          ]
+        },
+        {
+          "over": 2,
+          "deliveries": [
+            {
+              "ball": 1,
+              "delivery_type": "legal",
+              "is_legal": true,
+              "video_time_sec": 1248
+            },
+            {
+              "ball": 2,
+              "delivery_type": "wide",
+              "is_legal": false,
+              "video_time_sec": 1280
+            },
+            {
+              "ball": 2,
+              "delivery_type": "legal",
+              "is_legal": true,
+              "video_time_sec": 1318
+            },
+            {
+              "ball": 3,
+              "delivery_type": "legal",
+              "is_legal": true,
+              "video_time_sec": 1355
+            },
+            {
+              "ball": 4,
+              "delivery_type": "legal",
+              "is_legal": true,
+              "video_time_sec": 1460
+            },
+            {
+              "ball": 5,
+              "delivery_type": "legal",
+              "is_legal": true,
+              "video_time_sec": 1492
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

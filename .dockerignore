@@ -1,0 +1,69 @@
+# ==========================================
+# 🛑 CRITICAL SECURITY: Do NOT Bake Secrets Into Image
+# ==========================================
+.env
+.env.*
+*.pem
+*.key
+*.cer
+*.crt
+.streamlit/secrets.toml
+aws_credentials
+
+# ==========================================
+# 📦 Exclude Development & Git Metadata
+# ==========================================
+.git
+.gitignore
+.github
+README.md
+pytest.ini
+tests/
+eval/
+
+# ==========================================
+# 🐍 Python Caches & Environments
+# ==========================================
+venv/
+env/
+ENV/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ==========================================
+# 🗄️ Database & MLflow State Artifacts
+# ==========================================
+*.db
+*.sqlite
+*.sqlite3
+mlflow.db
+data/mlflow/
+data/match_stats.db
+data/*.parquet
+
+# ==========================================
+# 🎵 Temporary Audio & Video Files
+# ==========================================
+*.mp3
+*.wav
+*.m4a
+*.flac
+*.mp4
+data/audio_cache/*
+!data/audio_cache/.gitkeep
+static/audio/*
+!static/audio/.gitkeep
+
+# ==========================================
+# 💻 OS Artifacts
+# ==========================================
+.DS_Store
+.DS_Store?
+._*
+.idea/
+.vscode/
