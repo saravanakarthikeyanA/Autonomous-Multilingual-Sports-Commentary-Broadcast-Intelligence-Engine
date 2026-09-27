@@ -62,6 +62,7 @@ data/*.parquet
 *.m4a
 *.flac
 *.mp4
+!data/1276906.mp4
 !data/video_sync.json
 data/audio_cache/*
 !data/audio_cache/.gitkeep

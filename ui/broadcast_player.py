@@ -254,8 +254,8 @@ def render_synchronized_broadcast_player(
         <!-- Live Video Element -->
         <div class="video-container">
             <video id="sync-match-video" controls playsinline preload="auto">
-                <source src="/app/static/match.mp4" type="video/mp4">
-                <source src="static/match.mp4" type="video/mp4">
+                <source src="/app/data/1276906.mp4" type="video/mp4">
+                <source src="data/1276906.mp4" type="video/mp4">
                 Your browser does not support HTML5 video streaming.
             </video>
             
@@ -350,7 +350,7 @@ def render_synchronized_broadcast_player(
 
         // Initialize Video Source with dynamic absolute URL
         function initVideoSource() {{
-            const absVideoUrl = baseOrigin + "/app/static/match.mp4";
+            const absVideoUrl = baseOrigin + "/app/data/1276906.mp4";
             if (!video.src || video.src.startsWith("about")) {{
                 video.src = absVideoUrl;
                 video.load();
