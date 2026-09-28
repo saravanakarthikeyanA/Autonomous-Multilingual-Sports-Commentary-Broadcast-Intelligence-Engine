@@ -48,16 +48,21 @@ class LLMJudgeEvaluator:
         fallback_uri = f"sqlite:///{local_db_path}"
 
         configured = False
-        # Try primary tracking URI (e.g. http://localhost:5001 or http://mlflow:5000)
-        if primary_uri:
+        # Try primary tracking URI if reachable (fast 0.15s check)
+        if primary_uri and primary_uri.startswith("http"):
             try:
+                from urllib.parse import urlparse
+                import socket
+                parsed = urlparse(primary_uri)
+                sock = socket.create_connection((parsed.hostname or "localhost", parsed.port or 5000), timeout=0.15)
+                sock.close()
                 mlflow.set_tracking_uri(primary_uri)
                 mlflow.set_experiment(self.experiment_name)
                 self.tracking_uri = primary_uri
                 configured = True
                 print(f"[LLMJudge] MLflow tracking connected to '{primary_uri}', experiment '{self.experiment_name}'")
             except Exception as e:
-                print(f"[LLMJudge] Notice connecting to primary tracking URI '{primary_uri}': {e}. Falling back to SQLite.")
+                print(f"[LLMJudge] Remote server '{primary_uri}' unreachable ({e}). Using local SQLite.")
 
         if not configured:
             try:

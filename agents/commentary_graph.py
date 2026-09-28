@@ -83,11 +83,25 @@ class CommentaryAgentGraph:
             except Exception as e:
                 print(f"[AgentGraph] Warning initializing Groq client: {e}")
 
-        # Initialize MLflow GenAI Tracing & Experiment tracking
+        # Initialize MLflow GenAI Tracing & Experiment tracking (Fast Non-Blocking)
         if MLFLOW_AVAILABLE:
             try:
-                tracking_uri = os.getenv("MLFLOW_TRACKING_URI", AgentConfig.MLFLOW_TRACKING_URI)
-                mlflow.set_tracking_uri(tracking_uri)
+                base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+                local_db = os.path.join(base_dir, "data", "mlflow", "mlflow.db")
+                fallback_uri = f"sqlite:///{local_db}"
+                
+                target_uri = os.getenv("MLFLOW_TRACKING_URI", fallback_uri)
+                if target_uri.startswith("http"):
+                    # Fast socket check (0.15s) to prevent blocking Streamlit startup if server is down
+                    from urllib.parse import urlparse
+                    import socket
+                    parsed = urlparse(target_uri)
+                    sock = socket.create_connection((parsed.hostname or "localhost", parsed.port or 5000), timeout=0.15)
+                    sock.close()
+                    mlflow.set_tracking_uri(target_uri)
+                else:
+                    mlflow.set_tracking_uri(fallback_uri)
+                
                 mlflow.set_experiment(AgentConfig.MLFLOW_EXPERIMENT_NAME)
                 mlflow.langchain.autolog(log_models=False)
             except Exception:
@@ -95,7 +109,6 @@ class CommentaryAgentGraph:
                     local_db = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data", "mlflow", "mlflow.db"))
                     mlflow.set_tracking_uri(f"sqlite:///{local_db}")
                     mlflow.set_experiment(AgentConfig.MLFLOW_EXPERIMENT_NAME)
-                    mlflow.langchain.autolog(log_models=False)
                 except Exception:
                     pass
 
