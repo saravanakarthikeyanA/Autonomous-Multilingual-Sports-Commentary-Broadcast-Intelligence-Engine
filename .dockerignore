@@ -19,7 +19,6 @@ aws_credentials
 README.md
 pytest.ini
 tests/
-eval/
 
 # ==========================================
 # 🐍 Python Caches & Environments

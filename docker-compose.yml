@@ -13,6 +13,11 @@ services:
       - GROQ_FAST_MODEL=qwen/qwen3.8-27b
       - HF_TOKEN=${HF_TOKEN:-}
       - DB_PATH=data/match_stats.db
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+      - MLFLOW_EXPERIMENT_NAME=Cricket_Commentary_Evaluation
+    depends_on:
+      - mlflow
+      - prometheus
     restart: unless-stopped
 
   prometheus:
@@ -39,11 +44,11 @@ services:
     restart: unless-stopped
 
   mlflow:
-    image: ghcr.io/mlflow/mlflow:v2.15.0
+    image: ghcr.io/mlflow/mlflow:latest
     container_name: commentary_mlflow
     ports:
       - "5001:5000"
-    command: mlflow server --backend-store-uri sqlite:///mlflow.db --default-artifact-root /mlflow/artifacts --host 0.0.0.0 --port 5000
+    command: mlflow server --backend-store-uri sqlite:////mlflow/mlflow.db --default-artifact-root /mlflow/artifacts --host 0.0.0.0 --port 5000
     volumes:
       - ./data/mlflow:/mlflow
     restart: unless-stopped

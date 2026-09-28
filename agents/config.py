@@ -38,9 +38,11 @@ class AgentConfig:
     TEMPERATURE: float = 0.6
     MAX_TOKENS: int = 160
 
-    # Paths
+    # Paths & Tracking
     DB_PATH: str = os.getenv("DB_PATH", "data/match_stats.db")
     AUDIO_OUTPUT_DIR: str = os.getenv("AUDIO_OUTPUT_DIR", "data/audio_cache")
+    MLFLOW_TRACKING_URI: str = os.getenv("MLFLOW_TRACKING_URI", "http://localhost:5001")
+    MLFLOW_EXPERIMENT_NAME: str = os.getenv("MLFLOW_EXPERIMENT_NAME", "Cricket_Commentary_Evaluation")
 
     # Multilingual Personas by Language
     PERSONAS: dict[str, dict[str, dict[str, str]]] = {

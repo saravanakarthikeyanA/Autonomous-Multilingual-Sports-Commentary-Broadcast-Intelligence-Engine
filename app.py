@@ -36,6 +36,14 @@ from ui.analytics_charts import (
     create_win_probability_chart,
 )
 
+try:
+    from eval.llm_judge import LLMJudgeEvaluator
+
+    EVAL_AVAILABLE = True
+except ImportError:
+    LLMJudgeEvaluator = None
+    EVAL_AVAILABLE = False
+
 # Page Setup
 st.set_page_config(
     page_title="Multilingual AI Sports Broadcast | Cricket Commentary Platform",
@@ -646,8 +654,13 @@ with col_left:
 
 # --- RIGHT COLUMN: Google-Assistant Voice Chat & Analytics ---
 with col_right:
-    tab_qa, tab_analytics, tab_scorecard = st.tabs(
-        ["🗣️ Match Expert Chat", "📈 Financial Analytics", "📊 Scorecard"]
+    tab_qa, tab_analytics, tab_scorecard, tab_mlflow = st.tabs(
+        [
+            "🗣️ Match Expert Chat",
+            "📈 Financial Analytics",
+            "📊 Scorecard",
+            "🧪 MLflow Evaluation",
+        ]
     )
 
     # TAB 1: Live Voice & Text Match Chat in Active Language
@@ -851,6 +864,128 @@ with col_right:
             )
         if bowlers_list:
             st.dataframe(pd.DataFrame(bowlers_list), hide_index=True, width="stretch")
+
+    # TAB 4: MLflow Observability & Evaluation Hub
+    with tab_mlflow:
+        st.markdown("#### 🧪 MLflow Observability & LLM Evaluation")
+        st.caption(
+            "Track commentary factual accuracy, fluency, excitement, multilingual Q&A, and latencies in MLflow."
+        )
+
+        mlflow_url = AgentConfig.MLFLOW_TRACKING_URI
+        exp_name = AgentConfig.MLFLOW_EXPERIMENT_NAME
+
+        # Tracking Server Status Banner
+        st.markdown(
+            f"""
+            <div style="background: rgba(0, 240, 255, 0.08); border: 1px solid rgba(0, 240, 255, 0.35); border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <div style="font-size: 0.85rem; font-weight: 800; color: #00F0FF;">📡 MLflow Tracking Service</div>
+                    <div style="font-size: 0.78rem; color: #E2E8F0;">Experiment: <strong style="color:#FFD700;">{exp_name}</strong></div>
+                    <div style="font-size: 0.72rem; color: #A0AEC0;">Target: <code>{mlflow_url}</code></div>
+                </div>
+                <div>
+                    <a href="{mlflow_url}" target="_blank" style="background: linear-gradient(90deg, #00F0FF, #00A3FF); color: #070B19; text-decoration: none; padding: 6px 14px; border-radius: 6px; font-weight: 800; font-size: 0.78rem; display: inline-block;">Open MLflow UI ↗</a>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        # Target SLA Cards
+        sla_col1, sla_col2, sla_col3 = st.columns(3)
+        with sla_col1:
+            st.metric("🎯 Factual SLA", "≥ 95%", "Ground Truth")
+        with sla_col2:
+            st.metric("🎯 Fluency SLA", "≥ 4.0 / 5.0", "Natural Tone")
+        with sla_col3:
+            st.metric("🎯 Q&A SLA", "≥ 85%", "Multilingual")
+
+        st.markdown("---")
+        st.markdown("##### ⚡ Run LLM-as-a-Judge Evaluation Suite")
+
+        eval_scope = st.selectbox(
+            "Select Evaluation Scope",
+            options=[
+                "🌐 All Languages (EN, TA, HI)",
+                "🇬🇧 English Commentary & Q&A",
+                "🇮🇳 Tamil Commentary & Q&A (தமிழ்)",
+                "🇮🇳 Hindi Commentary & Q&A (हिन्दी)",
+            ],
+            index=0,
+            key="mlflow_eval_scope",
+        )
+        eval_balls = st.slider(
+            "Deliveries to Evaluate per Language", min_value=2, max_value=10, value=3, step=1
+        )
+
+        if st.button("🚀 Run Evaluation Benchmark & Log to MLflow", use_container_width=True, type="primary"):
+            if not EVAL_AVAILABLE or LLMJudgeEvaluator is None:
+                st.error("⚠️ Evaluation suite module `eval.llm_judge` is not installed or available.")
+            else:
+                with st.spinner("🤖 Running LangGraph agent commentary validation & Q&A scoring across ground truth..."):
+                    evaluator = LLMJudgeEvaluator()
+                if "All Languages" in eval_scope:
+                    eval_results = evaluator.run_full_evaluation(max_balls=eval_balls, languages=["en", "ta", "hi"])
+                elif "Tamil" in eval_scope:
+                    comm_res = evaluator.evaluate_commentary_stream(max_balls=eval_balls, lang="ta")
+                    qa_res = evaluator.evaluate_qa_benchmark(lang="ta")
+                    eval_results = {"commentary": {"ta": comm_res}, "qa": {"ta": qa_res}}
+                elif "Hindi" in eval_scope:
+                    comm_res = evaluator.evaluate_commentary_stream(max_balls=eval_balls, lang="hi")
+                    qa_res = evaluator.evaluate_qa_benchmark(lang="hi")
+                    eval_results = {"commentary": {"hi": comm_res}, "qa": {"hi": qa_res}}
+                else:
+                    comm_res = evaluator.evaluate_commentary_stream(max_balls=eval_balls, lang="en")
+                    qa_res = evaluator.evaluate_qa_benchmark(lang="en")
+                    eval_results = {"commentary": {"en": comm_res}, "qa": {"en": qa_res}}
+
+                st.session_state["latest_mlflow_eval"] = eval_results
+                st.success("✅ Evaluation successfully executed and logged to MLflow!")
+
+        if "latest_mlflow_eval" in st.session_state:
+            ev_data = st.session_state["latest_mlflow_eval"]
+            st.markdown("##### 📊 Benchmark Scorecards")
+            for l_key, c_rep in ev_data.get("commentary", {}).items():
+                l_title = {"en": "🇬🇧 English", "ta": "🇮🇳 Tamil", "hi": "🇮🇳 Hindi"}.get(l_key, l_key.upper())
+                q_rep = ev_data.get("qa", {}).get(l_key, {})
+                with st.expander(f"{l_title}: Accuracy {c_rep.get('factual_accuracy_pct')}% | Fluency {c_rep.get('avg_fluency_score')}/5 | Q&A {q_rep.get('qa_accuracy_pct', 100)}%", expanded=True):
+                    c1, c2, c3, c4 = st.columns(4)
+                    c1.metric("Factual Accuracy", f"{c_rep.get('factual_accuracy_pct')}%", "Target ≥95%")
+                    c2.metric("Fluency Score", f"{c_rep.get('avg_fluency_score')}/5.0", "Target ≥4.0")
+                    c3.metric("Excitement", f"{c_rep.get('avg_excitement_score')}/5.0", "Dynamic")
+                    c4.metric("Q&A Accuracy", f"{q_rep.get('qa_accuracy_pct', 100)}%", "Target ≥85%")
+
+                    if c_rep.get("results_sample"):
+                        st.markdown("**Sample Commentary Outputs Evaluated:**")
+                        for smp in c_rep["results_sample"]:
+                            st.caption(f"• **Ball {smp['ball']}** ({smp['event']}): *\"{smp['lead_commentary']}\"* — Factual: {'✅' if smp['is_factual'] else '❌'} ({smp['latency_sec']}s)")
+
+        # Historical Runs Explorer from MLflow DB
+        st.markdown("##### 📜 Recent Runs Logged in MLflow")
+        try:
+            import sqlite3
+            local_db = os.path.abspath("data/mlflow/mlflow.db")
+            if os.path.exists(local_db):
+                conn = sqlite3.connect(local_db)
+                cur = conn.cursor()
+                rows = cur.execute(
+                    "SELECT run_uuid, name, status, start_time FROM runs ORDER BY start_time DESC LIMIT 8"
+                ).fetchall()
+                if rows:
+                    run_table = []
+                    for r in rows:
+                        t_str = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(r[3] / 1000.0)) if r[3] else "N/A"
+                        run_table.append({
+                            "Run Name": r[1] or "Run",
+                            "Status": "✅ " + r[2] if r[2] == "FINISHED" else ("🟡 " + r[2]),
+                            "Started At": t_str,
+                            "Run ID": r[0][:8] + "...",
+                        })
+                    st.dataframe(pd.DataFrame(run_table), hide_index=True, width="stretch")
+                conn.close()
+        except Exception as e:
+            st.caption(f"Note loading MLflow runs: {e}")
 
 # Auto-Progression Event Loop with Two-Phase Broadcast Timeline Synchronization
 if st.session_state.get("is_live_playing", False):
