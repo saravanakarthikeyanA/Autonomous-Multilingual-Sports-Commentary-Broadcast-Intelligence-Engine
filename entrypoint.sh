@@ -1,38 +1,16 @@
 #!/bin/bash
 set -e
 
-# Default to port 8501 or 80 if $PORT is not set
-export PORT=${PORT:-8501}
-export PATH=$PATH:/usr/sbin:/usr/bin:/usr/local/bin:/usr/share/grafana/bin
-
-# Grafana Subpath, Security & Resource Optimization
-export GF_SECURITY_ADMIN_USER=${GF_SECURITY_ADMIN_USER:-admin}
-export GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD:-admin}
-export GF_SERVER_SERVE_FROM_SUB_PATH=true
-export GF_SERVER_ROOT_URL="%(protocol)s://%(domain)s/grafana/"
-export GF_ANALYTICS_REPORTING_ENABLED=false
-export GF_ANALYTICS_CHECK_FOR_UPDATES=false
-export GF_USERS_ALLOW_SIGN_UP=false
-
-# Memory Footprint Optimization for Free Tier (512MB RAM cap)
-export MALLOC_ARENA_MAX=2
-export PYTHONMALLOC=malloc
-
-# Internal Service URIs
-export MLFLOW_TRACKING_URI="http://127.0.0.1:5000/mlflow"
-
 echo "================================================================="
-echo "🏏 Starting Autonomous Sports Commentary & Intelligence Stack"
-echo "🌐 Unified Web Entrypoint on Port: $PORT"
+echo "🏏 Starting Autonomous Sports Commentary Platform on AWS"
+echo "🌐 Streamlit Broadcast Hub: Port 8501"
+echo "📊 Prometheus Metrics Exporter: Port 8000"
 echo "================================================================="
 
-# Inject $PORT into nginx configuration
-envsubst '$PORT' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
+# Ensure runtime directories exist
+mkdir -p /app/data/mlflow /app/data/audio_cache /root/.streamlit /app/.streamlit
 
-# Ensure all runtime directories exist
-mkdir -p /var/log/nginx /var/log/supervisor /run /tmp/prometheus /app/data/mlflow /app/data/audio_cache /var/lib/grafana/dashboards /var/lib/grafana/data /var/log/grafana /root/.streamlit /app/.streamlit
-
-# Guarantee Streamlit headless configuration & suppress interactive onboarding prompt
+# Guarantee Streamlit headless configuration & suppress interactive prompt
 echo '[general]' > /root/.streamlit/credentials.toml
 echo 'email = ""' >> /root/.streamlit/credentials.toml
 cp /root/.streamlit/credentials.toml /app/.streamlit/credentials.toml
@@ -52,5 +30,12 @@ if [ ! -f /app/data/match_stats.db ] || [ ! -s /app/data/match_stats.db ]; then
     python /app/database/db_loader.py || true
 fi
 
-# Start all daemons via supervisor
-exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
+# Launch Streamlit Application directly on Port 8501
+exec streamlit run app.py \
+    --server.port=8501 \
+    --server.address=0.0.0.0 \
+    --server.enableCORS=false \
+    --server.enableXsrfProtection=false \
+    --server.headless=true \
+    --browser.gatherUsageStats=false \
+    --server.fileWatcherType=none
