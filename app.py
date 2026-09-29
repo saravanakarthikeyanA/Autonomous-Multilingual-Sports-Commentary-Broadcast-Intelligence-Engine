@@ -127,6 +127,13 @@ st.markdown(
         font-weight: 700;
         display: inline-block;
     }
+
+    /* Prevent Streamlit from fading/dimming the screen during live stream execution */
+    [data-st-stale="true"], [data-testid="stAppViewContainer"], [data-testid="stMainBlockContainer"], div[data-testid="stAppViewBlockContainer"] {
+        opacity: 1 !important;
+        filter: none !important;
+        transition: none !important;
+    }
 </style>
 """,
     unsafe_allow_html=True,
@@ -1093,8 +1100,8 @@ if st.session_state.get("is_live_playing", False):
     cur_phase = st.session_state.get("delivery_phase", "IDLE")
 
     if cur_phase == "ACTION":
-        # Phase 1: Wait 8.0s live action
-        time.sleep(8.0)
+        # Phase 1: Ball action delivery window before outcome reveal
+        time.sleep(3.5)
         complete_delivery_outcome()
         st.rerun()
     elif cur_phase in ["OUTCOME", "IDLE"]:
@@ -1102,8 +1109,8 @@ if st.session_state.get("is_live_playing", False):
             cur_d = payload[max(0, cur_idx - 1)] if cur_idx > 0 else payload[0]
             next_d = payload[cur_idx]
 
-            audio_dur = float(st.session_state.get("last_audio_dur") or 6.0)
-            wait_time = max(audio_dur + 1.0, 5.0)
+            audio_dur = float(st.session_state.get("last_audio_dur") or 4.0)
+            wait_time = max(audio_dur + 0.5, 3.5)
 
             time.sleep(wait_time)
             start_delivery_action()
