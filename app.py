@@ -916,10 +916,10 @@ with col_right:
                     </div>
                 </div>
                 <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                    <a href="/mlflow/" target="_blank" style="background: linear-gradient(90deg, #00F0FF, #00A3FF); color: #070B19; text-decoration: none; padding: 5px 12px; border-radius: 6px; font-weight: 800; font-size: 0.75rem;">🧪 MLflow UI ↗</a>
-                    <a href="/grafana/" target="_blank" style="background: rgba(255, 153, 0, 0.2); border: 1px solid #FF9900; color: #FF9900; text-decoration: none; padding: 5px 12px; border-radius: 6px; font-weight: 700; font-size: 0.75rem;">📊 Grafana ↗</a>
-                    <a href="/prometheus/" target="_blank" style="background: rgba(230, 82, 44, 0.2); border: 1px solid #E6522C; color: #FF7043; text-decoration: none; padding: 5px 12px; border-radius: 6px; font-weight: 700; font-size: 0.75rem;">📈 Prometheus ↗</a>
-                    <a href="/metrics" target="_blank" style="background: rgba(255, 255, 255, 0.1); border: 1px solid #A0AEC0; color: #E2E8F0; text-decoration: none; padding: 5px 12px; border-radius: 6px; font-weight: 700; font-size: 0.75rem;">⚙️ /metrics ↗</a>
+                    <a href="javascript:void(0)" onclick="window.open('http://' + window.location.hostname + ':5001', '_blank')" style="background: linear-gradient(90deg, #00F0FF, #00A3FF); color: #070B19; text-decoration: none; padding: 5px 12px; border-radius: 6px; font-weight: 800; font-size: 0.75rem;">🧪 MLflow UI (:5001) ↗</a>
+                    <a href="javascript:void(0)" onclick="window.open('http://' + window.location.hostname + ':3000', '_blank')" style="background: rgba(255, 153, 0, 0.2); border: 1px solid #FF9900; color: #FF9900; text-decoration: none; padding: 5px 12px; border-radius: 6px; font-weight: 700; font-size: 0.75rem;">📊 Grafana (:3000) ↗</a>
+                    <a href="javascript:void(0)" onclick="window.open('http://' + window.location.hostname + ':9090', '_blank')" style="background: rgba(230, 82, 44, 0.2); border: 1px solid #E6522C; color: #FF7043; text-decoration: none; padding: 5px 12px; border-radius: 6px; font-weight: 700; font-size: 0.75rem;">📈 Prometheus (:9090) ↗</a>
+                    <a href="javascript:void(0)" onclick="window.open('http://' + window.location.hostname + ':8000/metrics', '_blank')" style="background: rgba(255, 255, 255, 0.1); border: 1px solid #A0AEC0; color: #E2E8F0; text-decoration: none; padding: 5px 12px; border-radius: 6px; font-weight: 700; font-size: 0.75rem;">⚙️ /metrics (:8000) ↗</a>
                 </div>
             </div>
             """,

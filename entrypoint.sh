@@ -19,6 +19,7 @@ echo '[server]' > /root/.streamlit/config.toml
 echo 'headless = true' >> /root/.streamlit/config.toml
 echo 'enableCORS = false' >> /root/.streamlit/config.toml
 echo 'enableXsrfProtection = false' >> /root/.streamlit/config.toml
+echo 'enableWebsocketCompression = false' >> /root/.streamlit/config.toml
 echo 'fileWatcherType = "none"' >> /root/.streamlit/config.toml
 echo '[browser]' >> /root/.streamlit/config.toml
 echo 'gatherUsageStats = false' >> /root/.streamlit/config.toml
@@ -38,4 +39,5 @@ exec streamlit run app.py \
     --server.enableXsrfProtection=false \
     --server.headless=true \
     --browser.gatherUsageStats=false \
+    --server.enableWebsocketCompression=false \
     --server.fileWatcherType=none

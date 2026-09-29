@@ -21,7 +21,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 RUN mkdir -p /app/data/mlflow /app/data/audio_cache /root/.streamlit /app/.streamlit \
     && echo '[general]\nemail = ""' > /root/.streamlit/credentials.toml \
     && cp /root/.streamlit/credentials.toml /app/.streamlit/credentials.toml \
-    && echo '[server]\nheadless = true\nenableCORS = false\nenableXsrfProtection = false\nfileWatcherType = "none"\n[browser]\ngatherUsageStats = false' > /root/.streamlit/config.toml \
+    && echo '[server]\nheadless = true\nenableCORS = false\nenableXsrfProtection = false\nenableWebsocketCompression = false\nfileWatcherType = "none"\n[browser]\ngatherUsageStats = false' > /root/.streamlit/config.toml \
     && cp /root/.streamlit/config.toml /app/.streamlit/config.toml
 
 # Copy source code and application assets
