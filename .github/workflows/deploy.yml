@@ -76,6 +76,8 @@ jobs:
                 echo "HF_TOKEN=${{ secrets.HF_TOKEN }}" >> .env
               fi
               echo "DB_PATH=data/match_stats.db" >> .env
+              echo "MLFLOW_TRACKING_URI=http://mlflow:5000" >> .env
+              echo "MLFLOW_EXPERIMENT_NAME=Cricket_Commentary_Evaluation" >> .env
             fi
 
             # Initialize database if needed

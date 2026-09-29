@@ -14,17 +14,6 @@ try:
     from awsglue.transforms import *
     from awsglue.utils import getResolvedOptions
     from pyspark.context import SparkContext
-    from pyspark.sql import SparkSession
-    from pyspark.sql.functions import col, explode, lit, struct
-    from pyspark.sql.types import (
-        ArrayType,
-        BooleanType,
-        FloatType,
-        IntegerType,
-        StringType,
-        StructField,
-        StructType,
-    )
 
     GLUE_AVAILABLE = True
 except ImportError:
@@ -108,7 +97,7 @@ def flatten_cricsheet_json(
                 r_total = runs.get("total", 0)
 
                 extras_dict = delivery.get("extras", {})
-                extra_type = list(extras_dict.keys())[0] if extras_dict else "none"
+                extra_type = next(iter(extras_dict), "none") if extras_dict else "none"
                 is_legal = extra_type not in ["wides", "noballs"]
                 if is_legal:
                     legal_balls_count += 1
@@ -195,7 +184,7 @@ def run_glue_job():
 
     s3_input_path = f"s3://{args['S3_INPUT_BUCKET']}/cricsheet-raw/"
     print(f"[Glue ETL] Ingesting JSON from {s3_input_path}")
-    raw_df = spark.read.json(s3_input_path)
+    _raw_df = spark.read.json(s3_input_path)
 
     # Process and write normalized tables to S3 Parquet and RDS PostgreSQL
     print("[Glue ETL] Transformation complete. Writing to RDS Postgres...")

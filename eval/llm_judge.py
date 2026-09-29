@@ -51,26 +51,35 @@ class LLMJudgeEvaluator:
         # Try primary tracking URI if reachable (fast 0.15s check)
         if primary_uri and primary_uri.startswith("http"):
             try:
-                from urllib.parse import urlparse
                 import socket
+                from urllib.parse import urlparse
+
                 parsed = urlparse(primary_uri)
-                sock = socket.create_connection((parsed.hostname or "localhost", parsed.port or 5000), timeout=0.15)
+                sock = socket.create_connection(
+                    (parsed.hostname or "localhost", parsed.port or 5000), timeout=0.15
+                )
                 sock.close()
                 mlflow.set_tracking_uri(primary_uri)
                 mlflow.set_experiment(self.experiment_name)
                 self.tracking_uri = primary_uri
                 configured = True
-                print(f"[LLMJudge] MLflow tracking connected to '{primary_uri}', experiment '{self.experiment_name}'")
-            except Exception as e:
-                print(f"[LLMJudge] Remote server '{primary_uri}' unreachable ({e}). Using local SQLite.")
+                print(
+                    f"[LLMJudge] MLflow tracking connected to '{primary_uri}', experiment '{self.experiment_name}'"
+                )
+            except Exception as e:  # noqa: BLE001
+                print(
+                    f"[LLMJudge] Remote server '{primary_uri}' unreachable ({e}). Using local SQLite."
+                )
 
         if not configured:
             try:
                 mlflow.set_tracking_uri(fallback_uri)
                 mlflow.set_experiment(self.experiment_name)
                 self.tracking_uri = fallback_uri
-                print(f"[LLMJudge] MLflow tracking connected to SQLite fallback '{fallback_uri}', experiment '{self.experiment_name}'")
-            except Exception as e:
+                print(
+                    f"[LLMJudge] MLflow tracking connected to SQLite fallback '{fallback_uri}', experiment '{self.experiment_name}'"
+                )
+            except Exception as e:  # noqa: BLE001
                 print(f"[LLMJudge] Notice setting fallback MLflow tracking: {e}")
 
     def evaluate_commentary_stream(
@@ -155,22 +164,28 @@ class LLMJudgeEvaluator:
                         name=f"commentary_eval_{d['over']}.{d['ball']}_{lang.upper()}",
                         span_type="AGENT",
                     ) as span:
-                        span.set_inputs({
-                            "ball": f"{d['over']}.{d['ball']}",
-                            "event": f"{d['bowler']} to {d['batter']} ({d['runs_total']}r)",
-                            "language": lang,
-                            "striker": d.get("batter", ""),
-                            "bowler": d.get("bowler", ""),
-                        })
-                        span.set_outputs({
-                            "lead_persona": comm.get("lead_persona", lead_persona_name),
-                            "lead_commentary": lead_text,
-                            "is_factual": is_factual,
-                            "fluency_score": fluency,
-                            "excitement_score": excitement,
-                            "latency_sec": round(latency, 3),
-                        })
-                except Exception:
+                        span.set_inputs(
+                            {
+                                "ball": f"{d['over']}.{d['ball']}",
+                                "event": f"{d['bowler']} to {d['batter']} ({d['runs_total']}r)",
+                                "language": lang,
+                                "striker": d.get("batter", ""),
+                                "bowler": d.get("bowler", ""),
+                            }
+                        )
+                        span.set_outputs(
+                            {
+                                "lead_persona": comm.get(
+                                    "lead_persona", lead_persona_name
+                                ),
+                                "lead_commentary": lead_text,
+                                "is_factual": is_factual,
+                                "fluency_score": fluency,
+                                "excitement_score": excitement,
+                                "latency_sec": round(latency, 3),
+                            }
+                        )
+                except Exception:  # noqa: BLE001, S110
                     pass
 
             results.append(
@@ -204,9 +219,7 @@ class LLMJudgeEvaluator:
             if excitement_scores
             else 4.4
         )
-        avg_latency = (
-            round(sum(latencies) / len(latencies), 3) if latencies else 0.45
-        )
+        avg_latency = round(sum(latencies) / len(latencies), 3) if latencies else 0.45
         p95_latency = (
             round(sorted(latencies)[int(len(latencies) * 0.95)], 3)
             if latencies
@@ -253,7 +266,9 @@ class LLMJudgeEvaluator:
 
                     # Metrics
                     mlflow.log_metric("factual_accuracy_pct", factual_accuracy_pct)
-                    mlflow.log_metric(f"factual_accuracy_pct_{lang}", factual_accuracy_pct)
+                    mlflow.log_metric(
+                        f"factual_accuracy_pct_{lang}", factual_accuracy_pct
+                    )
                     mlflow.log_metric("avg_fluency_score", avg_fluency)
                     mlflow.log_metric(f"avg_fluency_score_{lang}", avg_fluency)
                     mlflow.log_metric("avg_excitement_score", avg_excitement)
@@ -275,12 +290,14 @@ class LLMJudgeEvaluator:
                     print(
                         f"[LLMJudge] Successfully logged commentary evaluation for {lang.upper()} to MLflow."
                     )
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 print(f"[LLMJudge] Notice logging commentary evaluation to MLflow: {e}")
 
         return summary
 
-    def evaluate_qa_benchmark(self, lang: str = "en", nested: bool = False) -> dict[str, Any]:
+    def evaluate_qa_benchmark(
+        self, lang: str = "en", nested: bool = False
+    ) -> dict[str, Any]:
         """Evaluates Q&A Agent on cricket match queries in target language."""
         engine = ReplayEngine()
         step_res = engine.step()
@@ -336,12 +353,14 @@ class LLMJudgeEvaluator:
                         span_type="AGENT",
                     ) as span:
                         span.set_inputs({"question": q, "language": lang})
-                        span.set_outputs({
-                            "answer": ans_text,
-                            "is_valid": is_valid,
-                            "latency_sec": round(latency, 3),
-                        })
-                except Exception:
+                        span.set_outputs(
+                            {
+                                "answer": ans_text,
+                                "is_valid": is_valid,
+                                "latency_sec": round(latency, 3),
+                            }
+                        )
+                except Exception:  # noqa: BLE001, S110
                     pass
 
             details.append(
@@ -391,7 +410,7 @@ class LLMJudgeEvaluator:
                     print(
                         f"[LLMJudge] Successfully logged Q&A benchmark for {lang.upper()} to MLflow."
                     )
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 print(f"[LLMJudge] Notice logging Q&A benchmark to MLflow: {e}")
 
         return report
@@ -414,11 +433,13 @@ class LLMJudgeEvaluator:
         overall_latencies = []
 
         if MLFLOW_AVAILABLE:
-            master_run_name = f"LLM_Judge_Full_Benchmark_Suite"
+            master_run_name = "LLM_Judge_Full_Benchmark_Suite"
             try:
                 with mlflow.start_run(run_name=master_run_name) as parent_run:
                     for l in langs:
-                        comm = self.evaluate_commentary_stream(max_balls=max_balls, lang=l, nested=True)
+                        comm = self.evaluate_commentary_stream(
+                            max_balls=max_balls, lang=l, nested=True
+                        )
                         full_results["commentary"][l] = comm
                         overall_factual_acc.append(comm["factual_accuracy_pct"])
                         overall_fluency.append(comm["avg_fluency_score"])
@@ -429,12 +450,18 @@ class LLMJudgeEvaluator:
                         full_results["qa"][l] = qa
                         overall_qa_acc.append(qa["qa_accuracy_pct"])
 
-                    avg_factual = round(sum(overall_factual_acc) / len(overall_factual_acc), 2)
+                    avg_factual = round(
+                        sum(overall_factual_acc) / len(overall_factual_acc), 2
+                    )
                     avg_flu = round(sum(overall_fluency) / len(overall_fluency), 2)
-                    avg_exc = round(sum(overall_excitement) / len(overall_excitement), 2)
+                    avg_exc = round(
+                        sum(overall_excitement) / len(overall_excitement), 2
+                    )
                     avg_qa = round(sum(overall_qa_acc) / len(overall_qa_acc), 2)
                     avg_lat = round(sum(overall_latencies) / len(overall_latencies), 3)
-                    all_passed = avg_factual >= 95.0 and avg_flu >= 4.0 and avg_qa >= 85.0
+                    all_passed = (
+                        avg_factual >= 95.0 and avg_flu >= 4.0 and avg_qa >= 85.0
+                    )
 
                     full_results["summary"] = {
                         "overall_factual_accuracy_pct": avg_factual,
@@ -463,12 +490,14 @@ class LLMJudgeEvaluator:
                         f"\n[LLMJudge] Full Benchmark Suite successfully completed and logged to MLflow (Run ID: {parent_run.info.run_id})!"
                     )
                     return full_results
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 print(f"[LLMJudge] Notice during master suite run: {e}")
 
         # Fallback if MLflow is not active
         for l in langs:
-            full_results["commentary"][l] = self.evaluate_commentary_stream(max_balls=max_balls, lang=l)
+            full_results["commentary"][l] = self.evaluate_commentary_stream(
+                max_balls=max_balls, lang=l
+            )
             full_results["qa"][l] = self.evaluate_qa_benchmark(lang=l)
 
         return full_results

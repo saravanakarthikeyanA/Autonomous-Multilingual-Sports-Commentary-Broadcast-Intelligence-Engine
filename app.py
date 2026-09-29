@@ -390,7 +390,9 @@ with st.sidebar:
         "🇮🇳 हिन्दी (Hindi)": "hi",
     }
 
-    current_lang_label = [k for k, v in lang_options.items() if v == active_lang][0]
+    current_lang_label = next(
+        (k for k, v in lang_options.items() if v == active_lang), "🇬🇧 English"
+    )
     selected_lang_label = st.selectbox(
         "🎙️ Commentary Language",
         options=list(lang_options.keys()),
@@ -604,7 +606,9 @@ with col_left:
             )
 
             card_lead_persona = html.escape(str(card.get("lead_persona", lead_name)))
-            card_analyst_persona = html.escape(str(card.get("analyst_persona", analyst_name)))
+            card_analyst_persona = html.escape(
+                str(card.get("analyst_persona", analyst_name))
+            )
             card_lead_text = html.escape(str(card.get("lead", "")))
             card_over = html.escape(str(card.get("over", "")))
             card_ball = html.escape(str(card.get("ball", "")))
@@ -674,7 +678,7 @@ with col_left:
                 height=0,
                 width=0,
             )
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             print(f"[BroadcastVoice] Error: {e}")
 
 
@@ -946,29 +950,58 @@ with col_right:
             key="mlflow_eval_scope",
         )
         eval_balls = st.slider(
-            "Deliveries to Evaluate per Language", min_value=2, max_value=10, value=3, step=1
+            "Deliveries to Evaluate per Language",
+            min_value=2,
+            max_value=10,
+            value=3,
+            step=1,
         )
 
-        if st.button("🚀 Run Evaluation Benchmark & Log to MLflow", use_container_width=True, type="primary"):
+        if st.button(
+            "🚀 Run Evaluation Benchmark & Log to MLflow",
+            use_container_width=True,
+            type="primary",
+        ):
             if not EVAL_AVAILABLE or LLMJudgeEvaluator is None:
-                st.error("⚠️ Evaluation suite module `eval.llm_judge` is not installed or available.")
+                st.error(
+                    "⚠️ Evaluation suite module `eval.llm_judge` is not installed or available."
+                )
             else:
-                with st.spinner("🤖 Running LangGraph agent commentary validation & Q&A scoring across ground truth..."):
+                with st.spinner(
+                    "🤖 Running LangGraph agent commentary validation & Q&A scoring across ground truth..."
+                ):
                     evaluator = LLMJudgeEvaluator()
                 if "All Languages" in eval_scope:
-                    eval_results = evaluator.run_full_evaluation(max_balls=eval_balls, languages=["en", "ta", "hi"])
+                    eval_results = evaluator.run_full_evaluation(
+                        max_balls=eval_balls, languages=["en", "ta", "hi"]
+                    )
                 elif "Tamil" in eval_scope:
-                    comm_res = evaluator.evaluate_commentary_stream(max_balls=eval_balls, lang="ta")
+                    comm_res = evaluator.evaluate_commentary_stream(
+                        max_balls=eval_balls, lang="ta"
+                    )
                     qa_res = evaluator.evaluate_qa_benchmark(lang="ta")
-                    eval_results = {"commentary": {"ta": comm_res}, "qa": {"ta": qa_res}}
+                    eval_results = {
+                        "commentary": {"ta": comm_res},
+                        "qa": {"ta": qa_res},
+                    }
                 elif "Hindi" in eval_scope:
-                    comm_res = evaluator.evaluate_commentary_stream(max_balls=eval_balls, lang="hi")
+                    comm_res = evaluator.evaluate_commentary_stream(
+                        max_balls=eval_balls, lang="hi"
+                    )
                     qa_res = evaluator.evaluate_qa_benchmark(lang="hi")
-                    eval_results = {"commentary": {"hi": comm_res}, "qa": {"hi": qa_res}}
+                    eval_results = {
+                        "commentary": {"hi": comm_res},
+                        "qa": {"hi": qa_res},
+                    }
                 else:
-                    comm_res = evaluator.evaluate_commentary_stream(max_balls=eval_balls, lang="en")
+                    comm_res = evaluator.evaluate_commentary_stream(
+                        max_balls=eval_balls, lang="en"
+                    )
                     qa_res = evaluator.evaluate_qa_benchmark(lang="en")
-                    eval_results = {"commentary": {"en": comm_res}, "qa": {"en": qa_res}}
+                    eval_results = {
+                        "commentary": {"en": comm_res},
+                        "qa": {"en": qa_res},
+                    }
 
                 st.session_state["latest_mlflow_eval"] = eval_results
                 st.success("✅ Evaluation successfully executed and logged to MLflow!")
@@ -977,24 +1010,48 @@ with col_right:
             ev_data = st.session_state["latest_mlflow_eval"]
             st.markdown("##### 📊 Benchmark Scorecards")
             for l_key, c_rep in ev_data.get("commentary", {}).items():
-                l_title = {"en": "🇬🇧 English", "ta": "🇮🇳 Tamil", "hi": "🇮🇳 Hindi"}.get(l_key, l_key.upper())
+                l_title = {"en": "🇬🇧 English", "ta": "🇮🇳 Tamil", "hi": "🇮🇳 Hindi"}.get(
+                    l_key, l_key.upper()
+                )
                 q_rep = ev_data.get("qa", {}).get(l_key, {})
-                with st.expander(f"{l_title}: Accuracy {c_rep.get('factual_accuracy_pct')}% | Fluency {c_rep.get('avg_fluency_score')}/5 | Q&A {q_rep.get('qa_accuracy_pct', 100)}%", expanded=True):
+                with st.expander(
+                    f"{l_title}: Accuracy {c_rep.get('factual_accuracy_pct')}% | Fluency {c_rep.get('avg_fluency_score')}/5 | Q&A {q_rep.get('qa_accuracy_pct', 100)}%",
+                    expanded=True,
+                ):
                     c1, c2, c3, c4 = st.columns(4)
-                    c1.metric("Factual Accuracy", f"{c_rep.get('factual_accuracy_pct')}%", "Target ≥95%")
-                    c2.metric("Fluency Score", f"{c_rep.get('avg_fluency_score')}/5.0", "Target ≥4.0")
-                    c3.metric("Excitement", f"{c_rep.get('avg_excitement_score')}/5.0", "Dynamic")
-                    c4.metric("Q&A Accuracy", f"{q_rep.get('qa_accuracy_pct', 100)}%", "Target ≥85%")
+                    c1.metric(
+                        "Factual Accuracy",
+                        f"{c_rep.get('factual_accuracy_pct')}%",
+                        "Target ≥95%",
+                    )
+                    c2.metric(
+                        "Fluency Score",
+                        f"{c_rep.get('avg_fluency_score')}/5.0",
+                        "Target ≥4.0",
+                    )
+                    c3.metric(
+                        "Excitement",
+                        f"{c_rep.get('avg_excitement_score')}/5.0",
+                        "Dynamic",
+                    )
+                    c4.metric(
+                        "Q&A Accuracy",
+                        f"{q_rep.get('qa_accuracy_pct', 100)}%",
+                        "Target ≥85%",
+                    )
 
                     if c_rep.get("results_sample"):
                         st.markdown("**Sample Commentary Outputs Evaluated:**")
                         for smp in c_rep["results_sample"]:
-                            st.caption(f"• **Ball {smp['ball']}** ({smp['event']}): *\"{smp['lead_commentary']}\"* — Factual: {'✅' if smp['is_factual'] else '❌'} ({smp['latency_sec']}s)")
+                            st.caption(
+                                f'• **Ball {smp["ball"]}** ({smp["event"]}): *"{smp["lead_commentary"]}"* — Factual: {"✅" if smp["is_factual"] else "❌"} ({smp["latency_sec"]}s)'
+                            )
 
         # Historical Runs Explorer from MLflow DB
         st.markdown("##### 📜 Recent Runs Logged in MLflow")
         try:
             import sqlite3
+
             local_db = os.path.abspath("data/mlflow/mlflow.db")
             if os.path.exists(local_db):
                 conn = sqlite3.connect(local_db)
@@ -1005,16 +1062,28 @@ with col_right:
                 if rows:
                     run_table = []
                     for r in rows:
-                        t_str = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(r[3] / 1000.0)) if r[3] else "N/A"
-                        run_table.append({
-                            "Run Name": r[1] or "Run",
-                            "Status": "✅ " + r[2] if r[2] == "FINISHED" else ("🟡 " + r[2]),
-                            "Started At": t_str,
-                            "Run ID": r[0][:8] + "...",
-                        })
-                    st.dataframe(pd.DataFrame(run_table), hide_index=True, width="stretch")
+                        t_str = (
+                            time.strftime(
+                                "%Y-%m-%d %H:%M:%S", time.localtime(r[3] / 1000.0)
+                            )
+                            if r[3]
+                            else "N/A"
+                        )
+                        run_table.append(
+                            {
+                                "Run Name": r[1] or "Run",
+                                "Status": "✅ " + r[2]
+                                if r[2] == "FINISHED"
+                                else ("🟡 " + r[2]),
+                                "Started At": t_str,
+                                "Run ID": r[0][:8] + "...",
+                            }
+                        )
+                    st.dataframe(
+                        pd.DataFrame(run_table), hide_index=True, width="stretch"
+                    )
                 conn.close()
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             st.caption(f"Note loading MLflow runs: {e}")
 
 # Auto-Progression Event Loop with Two-Phase Broadcast Timeline Synchronization

@@ -129,7 +129,7 @@ def start_video_server(port: int = PORT) -> None:
         print(
             f"[VideoServer] HTTP 206 Video Streaming Server running on http://localhost:{port}/video"
         )
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         print(f"[VideoServer] Notice: {e}")
 
 

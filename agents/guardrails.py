@@ -4,12 +4,12 @@ Validates generated commentary across English, Tamil, and Hindi against
 ground-truth ball event data before broadcasting.
 """
 
-from typing import Any
+from typing import Any, ClassVar
 
 
 class CommentaryGuardrails:
     # Multilingual Keyword Dictionaries for Anti-Hallucination Grounding
-    WICKET_KEYWORDS = [
+    WICKET_KEYWORDS: ClassVar[list[str]] = [
         # English
         "out!",
         "gone!",
@@ -44,7 +44,7 @@ class CommentaryGuardrails:
         "बड़ा झटका",
     ]
 
-    SIX_KEYWORDS = [
+    SIX_KEYWORDS: ClassVar[list[str]] = [
         # English
         "maximum",
         "into the stands",
@@ -68,7 +68,7 @@ class CommentaryGuardrails:
         "मैक्सिमम",
     ]
 
-    FOUR_KEYWORDS = [
+    FOUR_KEYWORDS: ClassVar[list[str]] = [
         # English
         "to the fence",
         "four runs",
@@ -90,7 +90,7 @@ class CommentaryGuardrails:
         "शानदार चौका",
     ]
 
-    DOT_KEYWORDS = [
+    DOT_KEYWORDS: ClassVar[list[str]] = [
         # English
         "no run",
         "dot ball",
@@ -119,7 +119,6 @@ class CommentaryGuardrails:
         runs_batter = delivery.get("runs_batter", 0)
         runs_total = delivery.get("runs_total", 0)
         is_wicket = delivery.get("is_wicket", False)
-        extra_type = delivery.get("extra_type", "none")
 
         # 1. Wicket False Positive Check
         claimed_wicket = any(

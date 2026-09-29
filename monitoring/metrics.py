@@ -122,7 +122,7 @@ class MetricsManager:
                     )
                 else:
                     print(f"[MetricsManager] Notice starting exporter: {e}")
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 print(f"[MetricsManager] Notice starting exporter: {e}")
 
     @staticmethod

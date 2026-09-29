@@ -40,7 +40,7 @@ class ASREngine:
             try:
                 self.groq_client = Groq(api_key=self.groq_api_key)
                 print("[ASREngine] Initialized with Groq Cloud Whisper-v3 API.")
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 print(f"[ASREngine] Groq client initialization notice: {e}")
 
     def _normalize_lang(self, lang: str | None) -> str | None:
@@ -82,7 +82,7 @@ class ASREngine:
                     else str(transcription).strip()
                 )
                 return text
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             print(f"[ASREngine] Groq Cloud Whisper notice: {e}")
             return None
 
@@ -100,7 +100,7 @@ class ASREngine:
             if response.status_code == 200:
                 result = response.json()
                 return result.get("text", "").strip()
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             print(f"[ASREngine] Hugging Face Whisper notice: {e}")
         return None
 

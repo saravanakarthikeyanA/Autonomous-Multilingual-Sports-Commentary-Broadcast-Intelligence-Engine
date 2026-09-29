@@ -80,37 +80,51 @@ class CommentaryAgentGraph:
         if GROQ_AVAILABLE and self.api_key:
             try:
                 self.client = Groq(api_key=self.api_key)
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 print(f"[AgentGraph] Warning initializing Groq client: {e}")
 
         # Initialize MLflow GenAI Tracing & Experiment tracking (Fast Non-Blocking)
         if MLFLOW_AVAILABLE:
             try:
-                base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+                base_dir = os.path.abspath(
+                    os.path.join(os.path.dirname(__file__), "..")
+                )
                 local_db = os.path.join(base_dir, "data", "mlflow", "mlflow.db")
                 fallback_uri = f"sqlite:///{local_db}"
-                
+
                 target_uri = os.getenv("MLFLOW_TRACKING_URI", fallback_uri)
                 if target_uri.startswith("http"):
                     # Fast socket check (0.15s) to prevent blocking Streamlit startup if server is down
-                    from urllib.parse import urlparse
                     import socket
+                    from urllib.parse import urlparse
+
                     parsed = urlparse(target_uri)
-                    sock = socket.create_connection((parsed.hostname or "localhost", parsed.port or 5000), timeout=0.15)
+                    sock = socket.create_connection(
+                        (parsed.hostname or "localhost", parsed.port or 5000),
+                        timeout=0.15,
+                    )
                     sock.close()
                     mlflow.set_tracking_uri(target_uri)
                 else:
                     mlflow.set_tracking_uri(fallback_uri)
-                
+
                 mlflow.set_experiment(AgentConfig.MLFLOW_EXPERIMENT_NAME)
                 mlflow.langchain.autolog(log_models=False)
-            except Exception:
+            except Exception as err:  # noqa: BLE001
                 try:
-                    local_db = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data", "mlflow", "mlflow.db"))
+                    local_db = os.path.abspath(
+                        os.path.join(
+                            os.path.dirname(__file__),
+                            "..",
+                            "data",
+                            "mlflow",
+                            "mlflow.db",
+                        )
+                    )
                     mlflow.set_tracking_uri(f"sqlite:///{local_db}")
                     mlflow.set_experiment(AgentConfig.MLFLOW_EXPERIMENT_NAME)
-                except Exception:
-                    pass
+                except Exception:  # noqa: BLE001
+                    print(f"[AgentGraph] MLflow local tracking fallback notice: {err}")
 
         # Build and compile LangGraph workflows
         self.commentary_graph = self._build_commentary_graph()
@@ -167,7 +181,7 @@ class CommentaryAgentGraph:
                 text = response.choices[0].message.content
                 if text and text.strip():
                     return text.strip()
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 last_error = e
                 next_idx = models_to_try.index(m_name) + 1
                 next_m = (
@@ -519,9 +533,7 @@ class CommentaryAgentGraph:
             "lead_commentary": final_state.get("lead_commentary", ""),
             "analyst_commentary": final_state.get("analyst_commentary"),
             "lead_persona": final_state.get("lead_persona", "James Sterling"),
-            "analyst_persona": final_state.get(
-                "analyst_persona", "Harsha Atherton"
-            ),
+            "analyst_persona": final_state.get("analyst_persona", "Harsha Atherton"),
         }
 
     def generate_lead_commentary(

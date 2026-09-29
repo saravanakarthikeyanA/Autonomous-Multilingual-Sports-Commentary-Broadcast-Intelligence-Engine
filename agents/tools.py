@@ -64,12 +64,14 @@ class CricketStatsTools:
             try:
                 conn = sqlite3.connect(self.db_path)
                 cur = conn.cursor()
-                cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='matches';")
+                cur.execute(
+                    "SELECT name FROM sqlite_master WHERE type='table' AND name='matches';"
+                )
                 row = cur.fetchone()
                 conn.close()
                 if not row:
                     need_init = True
-            except Exception:
+            except (sqlite3.Error, OSError):
                 need_init = True
 
         if need_init:
@@ -78,7 +80,7 @@ class CricketStatsTools:
 
                 loader = DatabaseLoader(db_path=self.db_path)
                 loader.load_match("data/1276906.json", "data/video_sync.json")
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 print(f"[CricketStatsTools] Auto-init notice: {e}")
 
     def _get_read_only_connection(self) -> sqlite3.Connection:
@@ -86,7 +88,7 @@ class CricketStatsTools:
         abs_path = os.path.abspath(self.db_path)
         try:
             conn = sqlite3.connect(f"file:{abs_path}?mode=ro", uri=True)
-        except Exception:
+        except sqlite3.Error:
             conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row
         return conn
@@ -102,7 +104,7 @@ class CricketStatsTools:
             rows = cursor.fetchall()
             conn.close()
             return [dict(row) for row in rows]
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             return [{"error": str(e)}]
 
     def get_player_stats(self, player_name: str) -> dict[str, Any]:
@@ -134,9 +136,18 @@ class CricketStatsTools:
             )
             bowling_rows = [dict(r) for r in cursor.fetchall()]
             conn.close()
-            return {"player": player_name, "batting": batting_rows, "bowling": bowling_rows}
-        except Exception as e:
-            return {"player": player_name, "batting": [], "bowling": [], "error": str(e)}
+            return {
+                "player": player_name,
+                "batting": batting_rows,
+                "bowling": bowling_rows,
+            }
+        except Exception as e:  # noqa: BLE001
+            return {
+                "player": player_name,
+                "batting": [],
+                "bowling": [],
+                "error": str(e),
+            }
 
     def get_current_match_summary(self, match_id: str = "1276906") -> dict[str, Any]:
         """Retrieves match info, inning scores, top scorers, and best bowlers."""
@@ -183,7 +194,7 @@ class CricketStatsTools:
                 "top_batters": top_batters,
                 "top_bowlers": top_bowlers,
             }
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             return {
                 "match": {"match_id": match_id},
                 "innings": [],

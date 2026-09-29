@@ -58,7 +58,9 @@ class ReplayEngine:
                 for b_idx, delivery in enumerate(over.get("deliveries", []), start=1):
                     runs = delivery.get("runs", {})
                     extras_dict = delivery.get("extras", {})
-                    extra_type = list(extras_dict.keys())[0] if extras_dict else "none"
+                    extra_type = (
+                        next(iter(extras_dict), "none") if extras_dict else "none"
+                    )
                     is_legal = extra_type not in ["wides", "noballs"]
 
                     if is_legal:
@@ -314,11 +316,9 @@ class ReplayEngine:
     def get_delivery_at_timestamp(self, time_sec: float) -> dict[str, Any] | None:
         """Finds the most recent delivery occurring at or before video timestamp."""
         best_deliv = None
-        best_idx = -1
-        for i, d in enumerate(self.stream_deliveries):
+        for d in self.stream_deliveries:
             if d.get("video_time_sec") is not None and d["video_time_sec"] <= time_sec:
                 best_deliv = d
-                best_idx = i
         return best_deliv
 
     def get_state_snapshot(self) -> dict[str, Any]:

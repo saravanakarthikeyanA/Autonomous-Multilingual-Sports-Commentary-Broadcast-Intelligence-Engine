@@ -11,6 +11,7 @@ import hashlib
 import os
 import time
 import warnings
+from typing import ClassVar
 
 import numpy as np
 import requests
@@ -60,7 +61,7 @@ def _run_async_safe(coro, timeout: float = 20.0):
 
 class TTSEngine:
     # Voice profiles per language for Lead Commentator and Color Analyst
-    VOICE_REGISTRY: dict[str, dict[str, str]] = {
+    VOICE_REGISTRY: ClassVar[dict[str, dict[str, str]]] = {
         "en": {
             "lead": "en-IN-PrabhatNeural",  # High-energy Indian English broadcast voice
             "analyst": "en-GB-RyanNeural",  # Distinct analytical British/Intl English voice
@@ -137,13 +138,13 @@ class TTSEngine:
                     ".wav", f"_{os.getpid()}_{hash(v) % 10000}_edge.mp3"
                 )
 
-                async def _do_edge(selected_v=v):
+                async def _do_edge(selected_v=v, path=tmp_mp3):
                     communicate = edge_tts.Communicate(
                         clean_text, selected_v, rate=rate
                     )
-                    await communicate.save(tmp_mp3)
+                    await communicate.save(path)
 
-                _run_async_safe(_do_edge(v), timeout=15.0)
+                _run_async_safe(_do_edge(v, tmp_mp3), timeout=15.0)
 
                 if os.path.exists(tmp_mp3) and os.path.getsize(tmp_mp3) > 100:
                     data, sr = sf.read(tmp_mp3)
@@ -153,7 +154,7 @@ class TTSEngine:
                     except OSError:
                         pass
                     return True
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 print(
                     f"[TTSEngine] Edge-TTS notice for '{v}': {e}. Trying next candidate..."
                 )
@@ -191,7 +192,7 @@ class TTSEngine:
                 print(
                     f"[TTSEngine] Hugging Face Inference notice: HTTP {response.status_code}"
                 )
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             print(f"[TTSEngine] Hugging Face Kokoro synthesis notice: {e}")
         return False
 
@@ -211,7 +212,7 @@ class TTSEngine:
                 except OSError:
                     pass
                 return True
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             print(f"[TTSEngine] gTTS notice for '{lang}': {e}")
         return False
 
@@ -235,7 +236,7 @@ class TTSEngine:
             ratio = top2_energy / total_energy
             # True speech has widely distributed frequency spectrum (ratio < 0.30)
             return bool(ratio < 0.30)
-        except Exception:
+        except Exception:  # noqa: BLE001
             return False
 
     def synthesize(
@@ -272,24 +273,25 @@ class TTSEngine:
         # 1. Primary Engine: Edge-TTS Neural broadcast voice (Cloud API, 0MB RAM)
         if self._synthesize_edge(
             clean_text, selected_voice, cached_file, rate=rate_str
-        ):
-            if self.is_valid_speech_audio(cached_file):
-                MetricsManager.record_tts_latency(persona, time.time() - t0)
-                return cached_file
+        ) and self.is_valid_speech_audio(cached_file):
+            MetricsManager.record_tts_latency(persona, time.time() - t0)
+            return cached_file
 
         # 2. English Fallback: Hugging Face Kokoro-82M API (Cloud API, 0MB RAM)
         if lang_key == "en":
             hf_voice = voices.get(f"hf_{persona}", "am_adam")
-            if self._synthesize_hf_kokoro(clean_text, hf_voice, cached_file):
-                if self.is_valid_speech_audio(cached_file):
-                    MetricsManager.record_tts_latency(persona, time.time() - t0)
-                    return cached_file
-
-        # 3. Multilingual Secondary Fallback: gTTS (Cloud API, 0MB RAM)
-        if self._synthesize_gtts(clean_text, lang_key, cached_file):
-            if self.is_valid_speech_audio(cached_file):
+            if self._synthesize_hf_kokoro(
+                clean_text, hf_voice, cached_file
+            ) and self.is_valid_speech_audio(cached_file):
                 MetricsManager.record_tts_latency(persona, time.time() - t0)
                 return cached_file
+
+        # 3. Multilingual Secondary Fallback: gTTS (Cloud API, 0MB RAM)
+        if self._synthesize_gtts(
+            clean_text, lang_key, cached_file
+        ) and self.is_valid_speech_audio(cached_file):
+            MetricsManager.record_tts_latency(persona, time.time() - t0)
+            return cached_file
 
         # 4. Fallback Tone generator (Emergency only)
         sample_rate = 24000
@@ -345,7 +347,7 @@ class TTSEngine:
 
         try:
             lead_data, sr1 = sf.read(lead_path)
-            analyst_data, sr2 = sf.read(analyst_path)
+            analyst_data, _sr2 = sf.read(analyst_path)
 
             target_sr = sr1 or 24000
             # 0.3s natural broadcast pause
@@ -364,7 +366,7 @@ class TTSEngine:
             sf.write(dual_file, merged_data, target_sr)
             total_dur = len(merged_data) / float(target_sr)
             return dual_file, round(total_dur, 2)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             print(f"[TTSEngine] Dual merge notice: {e}. Falling back to lead audio.")
             return lead_path, self.get_audio_duration(lead_path)
 
@@ -375,7 +377,7 @@ class TTSEngine:
         try:
             info = sf.info(file_path)
             return round(info.duration, 2)
-        except Exception:
+        except Exception:  # noqa: BLE001
             return 5.0
 
 

@@ -130,10 +130,9 @@ class DatabaseLoader:
                 over_num = over.get("over", 0)
                 # Keep track of balls delivered in this specific over for sync matching
                 legal_ball_in_over = 0
-                ball_in_over_idx = 0
-
-                for delivery in over.get("deliveries", []):
-                    ball_in_over_idx += 1
+                for ball_in_over_idx, delivery in enumerate(
+                    over.get("deliveries", []), start=1
+                ):
                     batter = delivery.get("batter", "")
                     bowler = delivery.get("bowler", "")
                     non_striker = delivery.get("non_striker", "")
@@ -143,7 +142,9 @@ class DatabaseLoader:
                     r_total = runs.get("total", 0)
 
                     extras_dict = delivery.get("extras", {})
-                    extra_type = list(extras_dict.keys())[0] if extras_dict else "none"
+                    extra_type = (
+                        next(iter(extras_dict), "none") if extras_dict else "none"
+                    )
                     is_legal = extra_type not in ["wides", "noballs"]
 
                     if is_legal:

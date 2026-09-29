@@ -3,6 +3,7 @@ Configuration settings for Agents, Groq LLM inference, Guardrails, and Multiling
 """
 
 import os
+from typing import ClassVar
 
 try:
     from dotenv import load_dotenv
@@ -29,7 +30,7 @@ class AgentConfig:
     )
 
     # Active Multi-Model Round-Robin Pool for Rate-Limit Load Balancing
-    MODEL_POOL: list = [
+    MODEL_POOL: ClassVar[list[str]] = [
         "qwen/qwen3.8-27b",
         "openai/gpt-oss-120b",
         "allam-2-7b",
@@ -42,10 +43,12 @@ class AgentConfig:
     DB_PATH: str = os.getenv("DB_PATH", "data/match_stats.db")
     AUDIO_OUTPUT_DIR: str = os.getenv("AUDIO_OUTPUT_DIR", "data/audio_cache")
     MLFLOW_TRACKING_URI: str = os.getenv("MLFLOW_TRACKING_URI", "http://127.0.0.1:5001")
-    MLFLOW_EXPERIMENT_NAME: str = os.getenv("MLFLOW_EXPERIMENT_NAME", "Cricket_Commentary_Evaluation")
+    MLFLOW_EXPERIMENT_NAME: str = os.getenv(
+        "MLFLOW_EXPERIMENT_NAME", "Cricket_Commentary_Evaluation"
+    )
 
     # Multilingual Personas by Language
-    PERSONAS: dict[str, dict[str, dict[str, str]]] = {
+    PERSONAS: ClassVar[dict[str, dict[str, dict[str, str]]]] = {
         "en": {
             "lead": {
                 "name": "James Sterling",
