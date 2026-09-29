@@ -37,12 +37,10 @@ htmlcov/
 # ==========================================
 # 🗄️ Database & MLflow State Artifacts
 # ==========================================
-*.db
 *.sqlite
 *.sqlite3
-mlflow.db
-data/mlflow/
-data/match_stats.db
+!data/match_stats.db
+!data/mlflow/mlflow.db
 data/*.parquet
 
 # ==========================================

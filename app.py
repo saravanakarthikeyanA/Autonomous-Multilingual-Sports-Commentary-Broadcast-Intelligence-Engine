@@ -11,6 +11,7 @@ High-end TV Broadcast UI featuring:
 
 import base64
 import hashlib
+import html
 import os
 import time
 import warnings
@@ -441,21 +442,29 @@ lang_tag = {"en": "🇬🇧 English Feed", "ta": "🇮🇳 தமிழ் வ�
     active_lang, "🇬🇧 English Feed"
 )
 
+safe_batting_team = html.escape(str(current_state["batting_team"]))
+safe_striker = html.escape(str(current_state["striker"]))
+safe_bowler = html.escape(str(current_state["bowler"]))
+safe_score = html.escape(str(current_state["score"]))
+safe_wickets = html.escape(str(current_state["wickets"]))
+safe_overs = html.escape(str(current_state["overs_display"]))
+safe_target = html.escape(str(target_display))
+
 st.markdown(
     f"""
 <div class="match-banner">
     <div>
         <div style="display:flex; align-items:center; gap:10px; margin-bottom:4px;">
             {badge_html}
-            <span class="lang-pill">{lang_tag}</span>
+            <span class="lang-pill">{html.escape(lang_tag)}</span>
             <span style="font-weight:700; color:#E2E8F0; font-size:1.1rem;">3rd T20I: England vs India</span>
             <span style="color:#718096; font-size:0.85rem;">Trent Bridge, Nottingham</span>
         </div>
-        <div class="score-sub">Batting: <strong style="color:white;">{current_state["batting_team"]}</strong> | Striker: <strong style="color:#00F0FF;">{current_state["striker"]}</strong> | Bowler: <strong style="color:#FFB800;">{current_state["bowler"]}</strong></div>
+        <div class="score-sub">Batting: <strong style="color:white;">{safe_batting_team}</strong> | Striker: <strong style="color:#00F0FF;">{safe_striker}</strong> | Bowler: <strong style="color:#FFB800;">{safe_bowler}</strong></div>
     </div>
     <div style="text-align:right;">
-        <div class="score-box">{current_state["score"]}/{current_state["wickets"]} <span style="font-size:1.1rem; color:#A0AEC0;">({current_state["overs_display"]} ov)</span></div>
-        <div style="color:#00E5FF; font-weight:600; font-size:0.88rem;">{target_display}</div>
+        <div class="score-box">{safe_score}/{safe_wickets} <span style="font-size:1.1rem; color:#A0AEC0;">({safe_overs} ov)</span></div>
+        <div style="color:#00E5FF; font-weight:600; font-size:0.88rem;">{safe_target}</div>
     </div>
 </div>
 """,
@@ -514,15 +523,23 @@ with col_left:
     last_event_text = format_last_event(
         current_state.get("last_event"), video_start, phase, active_d, active_lang
     )
+    safe_ribbon_team = html.escape(str(current_state["batting_team"]))
+    safe_ribbon_striker = html.escape(str(current_state["striker"]))
+    safe_ribbon_bowler = html.escape(str(current_state["bowler"]))
+    safe_ribbon_score = html.escape(str(current_state["score"]))
+    safe_ribbon_wickets = html.escape(str(current_state["wickets"]))
+    safe_ribbon_overs = html.escape(str(current_state["overs_display"]))
+    safe_ribbon_event = html.escape(str(last_event_text))
+
     st.markdown(
         f"""
     <div style="background: rgba(7, 11, 25, 0.95); border-left: 4px solid #00F0FF; border-radius: 8px; padding: 10px 14px; margin-top: -6px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.6);">
         <div>
-            <div style="font-weight: 800; color: #00F0FF; font-size: 1.05rem;">{current_state["batting_team"]} {current_state["score"]}/{current_state["wickets"]} ({current_state["overs_display"]} ov)</div>
-            <div style="font-size: 0.8rem; color: #E2E8F0;">🏏 {current_state["striker"]} | 🎯 {current_state["bowler"]}</div>
+            <div style="font-weight: 800; color: #00F0FF; font-size: 1.05rem;">{safe_ribbon_team} {safe_ribbon_score}/{safe_ribbon_wickets} ({safe_ribbon_overs} ov)</div>
+            <div style="font-size: 0.8rem; color: #E2E8F0;">🏏 {safe_ribbon_striker} | 🎯 {safe_ribbon_bowler}</div>
         </div>
         <div style="text-align: right;">
-            <div style="font-size: 0.82rem; color: #FFD700; font-weight: 700;">{last_event_text}</div>
+            <div style="font-size: 0.82rem; color: #FFD700; font-weight: 700;">{safe_ribbon_event}</div>
             <div style="font-size: 0.72rem; color: #718096;">● Synced @ {video_start}.0s</div>
         </div>
     </div>
@@ -566,7 +583,7 @@ with col_left:
     analyst_name = active_personas["analyst"]["name"]
 
     st.markdown(
-        f"<div style='font-size:0.85rem; font-weight:800; color:#00F0FF; letter-spacing:0.8px; margin-top:10px; margin-bottom:6px;'>🎙️ REAL-TIME AI COMMENTARY ({lead_name.upper()} & {analyst_name.upper()})</div>",
+        f"<div style='font-size:0.85rem; font-weight:800; color:#00F0FF; letter-spacing:0.8px; margin-top:10px; margin-bottom:6px;'>🎙️ REAL-TIME AI COMMENTARY ({html.escape(lead_name.upper())} & {html.escape(analyst_name.upper())})</div>",
         unsafe_allow_html=True,
     )
     with st.container(height=300):
@@ -583,21 +600,27 @@ with col_left:
                 st.session_state.get("delivery_phase") == "OUTCOME"
             )
 
-            card_lead_persona = card.get("lead_persona", lead_name)
-            card_analyst_persona = card.get("analyst_persona", analyst_name)
+            card_lead_persona = html.escape(str(card.get("lead_persona", lead_name)))
+            card_analyst_persona = html.escape(str(card.get("analyst_persona", analyst_name)))
+            card_lead_text = html.escape(str(card.get("lead", "")))
+            card_over = html.escape(str(card.get("over", "")))
+            card_ball = html.escape(str(card.get("ball", "")))
+            card_runs = html.escape(str(card.get("runs", "")))
+
             st.markdown(
                 f"""
             <div style="background: rgba(0, 229, 255, 0.08); border-left: 4px solid #00F0FF; border-radius: 6px; padding: 8px 10px; margin-bottom: 6px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
                     <span style="font-size:0.75rem; font-weight:800; color:#00F0FF;">🎙️ {card_lead_persona}</span>
-                    <span style="font-size:0.7rem; color:#A0AEC0;">Over {card["over"]}.{card["ball"]} • {card["runs"]} runs</span>
+                    <span style="font-size:0.7rem; color:#A0AEC0;">Over {card_over}.{card_ball} • {card_runs} runs</span>
                 </div>
-                <div style="font-size:0.84rem; color:#FFFFFF;">{card["lead"]}</div>
+                <div style="font-size:0.84rem; color:#FFFFFF;">{card_lead_text}</div>
             </div>
             """,
                 unsafe_allow_html=True,
             )
             if card.get("analyst"):
+                card_analyst_text = html.escape(str(card.get("analyst", "")))
                 st.markdown(
                     f"""
                 <div style="background: rgba(255, 184, 0, 0.08); border-left: 4px solid #FFB800; border-radius: 6px; padding: 8px 10px; margin-bottom: 6px;">
@@ -605,7 +628,7 @@ with col_left:
                         <span style="font-size:0.75rem; font-weight:800; color:#FFB800;">📊 {card_analyst_persona}</span>
                         <span style="font-size:0.7rem; color:#A0AEC0;">Tactical Insight</span>
                     </div>
-                    <div style="font-size:0.84rem; color:#FFFFFF;">{card["analyst"]}</div>
+                    <div style="font-size:0.84rem; color:#FFFFFF;">{card_analyst_text}</div>
                 </div>
                 """,
                     unsafe_allow_html=True,
@@ -875,17 +898,21 @@ with col_right:
         mlflow_url = AgentConfig.MLFLOW_TRACKING_URI
         exp_name = AgentConfig.MLFLOW_EXPERIMENT_NAME
 
-        # Tracking Server Status Banner
+        # Observability Navigation Hub
         st.markdown(
             f"""
-            <div style="background: rgba(0, 240, 255, 0.08); border: 1px solid rgba(0, 240, 255, 0.35); border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <div style="font-size: 0.85rem; font-weight: 800; color: #00F0FF;">📡 MLflow Tracking Service</div>
-                    <div style="font-size: 0.78rem; color: #E2E8F0;">Experiment: <strong style="color:#FFD700;">{exp_name}</strong></div>
-                    <div style="font-size: 0.72rem; color: #A0AEC0;">Target: <code>{mlflow_url}</code></div>
+            <div style="background: rgba(0, 240, 255, 0.08); border: 1px solid rgba(0, 240, 255, 0.35); border-radius: 8px; padding: 12px 16px; margin-bottom: 14px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <div>
+                        <div style="font-size: 0.88rem; font-weight: 800; color: #00F0FF;">📡 Observability & Tracking Hub</div>
+                        <div style="font-size: 0.76rem; color: #E2E8F0;">Experiment: <strong style="color:#FFD700;">{exp_name}</strong></div>
+                    </div>
                 </div>
-                <div>
-                    <a href="{mlflow_url}" target="_blank" style="background: linear-gradient(90deg, #00F0FF, #00A3FF); color: #070B19; text-decoration: none; padding: 6px 14px; border-radius: 6px; font-weight: 800; font-size: 0.78rem; display: inline-block;">Open MLflow UI ↗</a>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <a href="/mlflow/" target="_blank" style="background: linear-gradient(90deg, #00F0FF, #00A3FF); color: #070B19; text-decoration: none; padding: 5px 12px; border-radius: 6px; font-weight: 800; font-size: 0.75rem;">🧪 MLflow UI ↗</a>
+                    <a href="/grafana/" target="_blank" style="background: rgba(255, 153, 0, 0.2); border: 1px solid #FF9900; color: #FF9900; text-decoration: none; padding: 5px 12px; border-radius: 6px; font-weight: 700; font-size: 0.75rem;">📊 Grafana ↗</a>
+                    <a href="/prometheus/" target="_blank" style="background: rgba(230, 82, 44, 0.2); border: 1px solid #E6522C; color: #FF7043; text-decoration: none; padding: 5px 12px; border-radius: 6px; font-weight: 700; font-size: 0.75rem;">📈 Prometheus ↗</a>
+                    <a href="/metrics" target="_blank" style="background: rgba(255, 255, 255, 0.1); border: 1px solid #A0AEC0; color: #E2E8F0; text-decoration: none; padding: 5px 12px; border-radius: 6px; font-weight: 700; font-size: 0.75rem;">⚙️ /metrics ↗</a>
                 </div>
             </div>
             """,
