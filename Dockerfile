@@ -29,8 +29,12 @@ RUN ARCH=$(dpkg --print-architecture) \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Create necessary directories
-RUN mkdir -p /app/data/mlflow /app/data/audio_cache /var/log /tmp/prometheus /var/lib/grafana/dashboards /etc/grafana/provisioning/dashboards /etc/grafana/provisioning/datasources /etc/prometheus
+# Create necessary directories and configure Streamlit headless credentials
+RUN mkdir -p /app/data/mlflow /app/data/audio_cache /var/log /tmp/prometheus /var/lib/grafana/dashboards /etc/grafana/provisioning/dashboards /etc/grafana/provisioning/datasources /etc/prometheus /root/.streamlit /app/.streamlit \
+    && echo '[general]\nemail = ""' > /root/.streamlit/credentials.toml \
+    && cp /root/.streamlit/credentials.toml /app/.streamlit/credentials.toml \
+    && echo '[server]\nheadless = true\nenableCORS = false\nenableXsrfProtection = false\nfileWatcherType = "none"\n[browser]\ngatherUsageStats = false' > /root/.streamlit/config.toml \
+    && cp /root/.streamlit/config.toml /app/.streamlit/config.toml
 
 # Copy service configs
 COPY nginx.conf.template /etc/nginx/nginx.conf.template
