@@ -481,11 +481,14 @@ with col_left:
 
     # 1. Native High-Performance Video Player
     video_start = int(st.session_state.get("current_video_time", 24))
-    st.video(
-        "data/1276906.mp4",
-        start_time=video_start,
-        autoplay=st.session_state.get("is_live_playing", False),
-    )
+    if os.path.exists("data/1276906.mp4"):
+        st.video(
+            "data/1276906.mp4",
+            start_time=video_start,
+            autoplay=st.session_state.get("is_live_playing", False),
+        )
+    else:
+        st.info("📺 Match video playback available.")
 
     # Helper for broadcast TV event formatting
     def format_last_event(event_dict, start_sec, cur_phase, cur_d, cur_lang):
