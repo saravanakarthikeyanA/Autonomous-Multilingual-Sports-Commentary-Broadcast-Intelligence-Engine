@@ -5,11 +5,18 @@ set -e
 export PORT=${PORT:-8501}
 export PATH=$PATH:/usr/sbin:/usr/bin:/usr/local/bin:/usr/share/grafana/bin
 
-# Grafana Subpath & Security Environment Variables
+# Grafana Subpath, Security & Resource Optimization
 export GF_SECURITY_ADMIN_USER=${GF_SECURITY_ADMIN_USER:-admin}
 export GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD:-admin}
 export GF_SERVER_SERVE_FROM_SUB_PATH=true
 export GF_SERVER_ROOT_URL="%(protocol)s://%(domain)s/grafana/"
+export GF_ANALYTICS_REPORTING_ENABLED=false
+export GF_ANALYTICS_CHECK_FOR_UPDATES=false
+export GF_USERS_ALLOW_SIGN_UP=false
+
+# Memory Footprint Optimization for Free Tier (512MB RAM cap)
+export MALLOC_ARENA_MAX=2
+export PYTHONMALLOC=malloc
 
 # Internal Service URIs
 export MLFLOW_TRACKING_URI="http://127.0.0.1:5000/mlflow"
