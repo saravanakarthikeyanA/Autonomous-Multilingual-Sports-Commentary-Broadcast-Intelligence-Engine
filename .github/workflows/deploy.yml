@@ -69,17 +69,31 @@ jobs:
               git reset --hard origin/main
             fi
 
-            # Set up .env file from GitHub Secret if provided
-            if [ -n "${{ secrets.GROQ_API_KEY }}" ]; then
-              echo "GROQ_API_KEY=${{ secrets.GROQ_API_KEY }}" > .env
-              echo "GROQ_MODEL=qwen/qwen3.8-27b" >> .env
-              echo "GROQ_FAST_MODEL=qwen/qwen3.8-27b" >> .env
-              if [ -n "${{ secrets.HF_TOKEN }}" ]; then
-                echo "HF_TOKEN=${{ secrets.HF_TOKEN }}" >> .env
-              fi
-              echo "DB_PATH=data/match_stats.db" >> .env
-              echo "MLFLOW_TRACKING_URI=http://mlflow:5000" >> .env
-              echo "MLFLOW_EXPERIMENT_NAME=Cricket_Commentary_Evaluation" >> .env
+            # Set up .env file from GitHub Secrets
+            echo "GROQ_API_KEY=${{ secrets.GROQ_API_KEY }}" > .env
+            echo "GROQ_MODEL=qwen/qwen3.8-27b" >> .env
+            echo "GROQ_FAST_MODEL=qwen/qwen3.8-27b" >> .env
+            if [ -n "${{ secrets.HF_TOKEN }}" ]; then
+              echo "HF_TOKEN=${{ secrets.HF_TOKEN }}" >> .env
+            fi
+            echo "DB_PATH=data/match_stats.db" >> .env
+            echo "AUDIO_OUTPUT_DIR=data/audio_cache" >> .env
+            if [ -n "${{ secrets.MLFLOW_TRACKING_URI }}" ]; then
+              echo "MLFLOW_TRACKING_URI=${{ secrets.MLFLOW_TRACKING_URI }}" >> .env
+            else
+              echo "MLFLOW_TRACKING_URI=https://dagshub.com/saravanasmart2001/cricket-voice-agent.mlflow" >> .env
+            fi
+            if [ -n "${{ secrets.MLFLOW_TRACKING_USERNAME }}" ]; then
+              echo "MLFLOW_TRACKING_USERNAME=${{ secrets.MLFLOW_TRACKING_USERNAME }}" >> .env
+            fi
+            if [ -n "${{ secrets.MLFLOW_TRACKING_PASSWORD }}" ]; then
+              echo "MLFLOW_TRACKING_PASSWORD=${{ secrets.MLFLOW_TRACKING_PASSWORD }}" >> .env
+            fi
+            echo "MLFLOW_EXPERIMENT_NAME=${{ secrets.MLFLOW_EXPERIMENT_NAME != '' && secrets.MLFLOW_EXPERIMENT_NAME || 'Cricket_Commentary_Evaluation' }}" >> .env
+            if [ -n "${{ secrets.GRAFANA_CLOUD_URL }}" ]; then
+              echo "GRAFANA_CLOUD_URL=${{ secrets.GRAFANA_CLOUD_URL }}" >> .env
+            else
+              echo "GRAFANA_CLOUD_URL=https://merrydogwood2417.grafana.net" >> .env
             fi
 
             # Initialize database if needed
