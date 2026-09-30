@@ -705,13 +705,31 @@ with col_right:
             "Speak into your microphone or type in English, தமிழ், or हिन्दी for instant spoken answers!"
         )
 
-        # Native Live Microphone Audio Input
+        # Voice Input Mode: Live Microphone (HTTPS / localhost) or Audio File Upload
+        voice_mode = st.radio(
+            "Voice Input Option",
+            ["🎙️ Live Microphone", "📁 Upload Audio (.wav, .mp3)"],
+            horizontal=True,
+            label_visibility="collapsed",
+            key="voice_input_mode_toggle",
+        )
+
         live_audio = None
-        try:
-            live_audio = st.audio_input("🎙️ Tap to Speak (Auto-Transcribe EN / TA / HI)")
-        except AttributeError:
+        if voice_mode == "🎙️ Live Microphone":
+            try:
+                live_audio = st.audio_input(
+                    "🎙️ Tap to Speak (Auto-Transcribe EN / TA / HI)",
+                    help="Requires HTTPS or localhost for browser mic permissions. On HTTP IP, use 'Upload Audio' or enable Chrome insecure origin flag.",
+                )
+            except (AttributeError, Exception):
+                live_audio = st.file_uploader(
+                    "🎙️ Upload Voice Question (.wav, .mp3)", type=["wav", "mp3", "m4a", "ogg", "webm"]
+                )
+        else:
             live_audio = st.file_uploader(
-                "🎙️ Upload Voice Question (.wav)", type=["wav", "mp3"]
+                "📁 Upload Voice Question (.wav, .mp3, .m4a)",
+                type=["wav", "mp3", "m4a", "ogg", "webm"],
+                key="voice_file_upload_input",
             )
 
         if live_audio is not None:
