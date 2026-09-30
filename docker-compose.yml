@@ -20,6 +20,20 @@ services:
       - GRAFANA_CLOUD_URL=${GRAFANA_CLOUD_URL:-}
     restart: unless-stopped
 
+  caddy:
+    image: caddy:2-alpine
+    container_name: commentary_caddy
+    ports:
+      - "80:80"
+      - "443:443"
+    command: caddy reverse-proxy --from 98.130.105.232.sslip.io --to app:8501
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+    restart: unless-stopped
+    depends_on:
+      - app
+
   prometheus:
     image: prom/prometheus:v2.45.0
     container_name: commentary_prometheus
@@ -49,3 +63,7 @@ services:
     depends_on:
       - prometheus
     restart: unless-stopped
+
+volumes:
+  caddy_data:
+  caddy_config:
