@@ -53,6 +53,8 @@ jobs:
           username: ${{ secrets.EC2_USER != '' && secrets.EC2_USER || 'ubuntu' }}
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
+          timeout: 30s
+          command_timeout: 10m
           script: |
             set -e
             echo "🚀 Starting Deployment on AWS EC2..."

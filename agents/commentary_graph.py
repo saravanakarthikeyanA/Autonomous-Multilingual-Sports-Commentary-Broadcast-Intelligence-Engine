@@ -92,21 +92,39 @@ class CommentaryAgentGraph:
                 local_db = os.path.join(base_dir, "data", "mlflow", "mlflow.db")
                 fallback_uri = f"sqlite:///{local_db}"
 
-                target_uri = os.getenv("MLFLOW_TRACKING_URI", fallback_uri)
+                target_uri = (
+                    os.getenv("MLFLOW_TRACKING_URI", "").strip() or fallback_uri
+                )
                 if target_uri.startswith("http"):
-                    # Fast socket check (0.15s) to prevent blocking Streamlit startup if server is down
+                    # Fast socket check (0.2s) to prevent blocking Streamlit startup if server is down
                     import socket
                     from urllib.parse import urlparse
 
                     parsed = urlparse(target_uri)
-                    sock = socket.create_connection(
-                        (parsed.hostname or "localhost", parsed.port or 5000),
-                        timeout=0.15,
+                    target_port = parsed.port or (
+                        443 if parsed.scheme == "https" else 5000
                     )
-                    sock.close()
-                    mlflow.set_tracking_uri(target_uri)
+                    try:
+                        sock = socket.create_connection(
+                            (parsed.hostname or "localhost", target_port),
+                            timeout=0.2,
+                        )
+                        sock.close()
+                        mlflow.set_tracking_uri(target_uri)
+                    except Exception:  # noqa: BLE001
+                        mlflow.set_tracking_uri(fallback_uri)
                 else:
                     mlflow.set_tracking_uri(fallback_uri)
+
+                # Set tracking credentials if provided for hosted MLflow (e.g. DagsHub)
+                if AgentConfig.MLFLOW_TRACKING_USERNAME:
+                    os.environ["MLFLOW_TRACKING_USERNAME"] = (
+                        AgentConfig.MLFLOW_TRACKING_USERNAME
+                    )
+                if AgentConfig.MLFLOW_TRACKING_PASSWORD:
+                    os.environ["MLFLOW_TRACKING_PASSWORD"] = (
+                        AgentConfig.MLFLOW_TRACKING_PASSWORD
+                    )
 
                 mlflow.set_experiment(AgentConfig.MLFLOW_EXPERIMENT_NAME)
                 mlflow.langchain.autolog(log_models=False)

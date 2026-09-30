@@ -913,6 +913,17 @@ with col_right:
         exp_name = AgentConfig.MLFLOW_EXPERIMENT_NAME
 
         # Observability Navigation Hub
+        mlflow_link = (
+            mlflow_url
+            if mlflow_url.startswith("http")
+            else "http://' + window.location.hostname + ':5001"
+        )
+        grafana_link = (
+            AgentConfig.GRAFANA_CLOUD_URL
+            if AgentConfig.GRAFANA_CLOUD_URL
+            else "http://' + window.location.hostname + ':3000"
+        )
+
         st.markdown(
             f"""
             <div style="background: rgba(0, 240, 255, 0.08); border: 1px solid rgba(0, 240, 255, 0.35); border-radius: 8px; padding: 12px 16px; margin-bottom: 14px;">
@@ -923,10 +934,9 @@ with col_right:
                     </div>
                 </div>
                 <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                    <a href="javascript:void(0)" onclick="window.open('http://' + window.location.hostname + ':5001', '_blank')" style="background: linear-gradient(90deg, #00F0FF, #00A3FF); color: #070B19; text-decoration: none; padding: 5px 12px; border-radius: 6px; font-weight: 800; font-size: 0.75rem;">🧪 MLflow UI (:5001) ↗</a>
-                    <a href="javascript:void(0)" onclick="window.open('http://' + window.location.hostname + ':3000', '_blank')" style="background: rgba(255, 153, 0, 0.2); border: 1px solid #FF9900; color: #FF9900; text-decoration: none; padding: 5px 12px; border-radius: 6px; font-weight: 700; font-size: 0.75rem;">📊 Grafana (:3000) ↗</a>
-                    <a href="javascript:void(0)" onclick="window.open('http://' + window.location.hostname + ':9090', '_blank')" style="background: rgba(230, 82, 44, 0.2); border: 1px solid #E6522C; color: #FF7043; text-decoration: none; padding: 5px 12px; border-radius: 6px; font-weight: 700; font-size: 0.75rem;">📈 Prometheus (:9090) ↗</a>
-                    <a href="javascript:void(0)" onclick="window.open('http://' + window.location.hostname + ':8000/metrics', '_blank')" style="background: rgba(255, 255, 255, 0.1); border: 1px solid #A0AEC0; color: #E2E8F0; text-decoration: none; padding: 5px 12px; border-radius: 6px; font-weight: 700; font-size: 0.75rem;">⚙️ /metrics (:8000) ↗</a>
+                    <a href="javascript:void(0)" onclick="window.open('{mlflow_link}', '_blank')" style="background: linear-gradient(90deg, #00F0FF, #00A3FF); color: #070B19; text-decoration: none; padding: 5px 12px; border-radius: 6px; font-weight: 800; font-size: 0.75rem;">🧪 MLflow Dashboard ↗</a>
+                    <a href="javascript:void(0)" onclick="window.open('{grafana_link}', '_blank')" style="background: rgba(255, 153, 0, 0.2); border: 1px solid #FF9900; color: #FF9900; text-decoration: none; padding: 5px 12px; border-radius: 6px; font-weight: 700; font-size: 0.75rem;">📊 Grafana Cloud / Metrics ↗</a>
+                    <a href="javascript:void(0)" onclick="window.open('http://' + window.location.hostname + ':8000/metrics', '_blank')" style="background: rgba(255, 255, 255, 0.1); border: 1px solid #A0AEC0; color: #E2E8F0; text-decoration: none; padding: 5px 12px; border-radius: 6px; font-weight: 700; font-size: 0.75rem;">⚙️ Prometheus /metrics (:8000) ↗</a>
                 </div>
             </div>
             """,

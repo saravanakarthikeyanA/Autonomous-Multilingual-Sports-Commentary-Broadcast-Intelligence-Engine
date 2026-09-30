@@ -42,10 +42,13 @@ class AgentConfig:
     # Paths & Tracking
     DB_PATH: str = os.getenv("DB_PATH", "data/match_stats.db")
     AUDIO_OUTPUT_DIR: str = os.getenv("AUDIO_OUTPUT_DIR", "data/audio_cache")
-    MLFLOW_TRACKING_URI: str = os.getenv("MLFLOW_TRACKING_URI", "http://127.0.0.1:5001")
+    MLFLOW_TRACKING_URI: str = os.getenv("MLFLOW_TRACKING_URI", "")
+    MLFLOW_TRACKING_USERNAME: str = os.getenv("MLFLOW_TRACKING_USERNAME", "")
+    MLFLOW_TRACKING_PASSWORD: str = os.getenv("MLFLOW_TRACKING_PASSWORD", "")
     MLFLOW_EXPERIMENT_NAME: str = os.getenv(
         "MLFLOW_EXPERIMENT_NAME", "Cricket_Commentary_Evaluation"
     )
+    GRAFANA_CLOUD_URL: str = os.getenv("GRAFANA_CLOUD_URL", "")
 
     # Multilingual Personas by Language
     PERSONAS: ClassVar[dict[str, dict[str, dict[str, str]]]] = {

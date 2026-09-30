@@ -13,16 +13,19 @@ services:
       - GROQ_FAST_MODEL=${GROQ_FAST_MODEL:-qwen/qwen3.8-27b}
       - HF_TOKEN=${HF_TOKEN:-}
       - DB_PATH=data/match_stats.db
-      - MLFLOW_TRACKING_URI=http://mlflow:5000
-      - MLFLOW_EXPERIMENT_NAME=Cricket_Commentary_Evaluation
-    depends_on:
-      - mlflow
-      - prometheus
+      - MLFLOW_TRACKING_URI=${MLFLOW_TRACKING_URI:-}
+      - MLFLOW_TRACKING_USERNAME=${MLFLOW_TRACKING_USERNAME:-}
+      - MLFLOW_TRACKING_PASSWORD=${MLFLOW_TRACKING_PASSWORD:-}
+      - MLFLOW_EXPERIMENT_NAME=${MLFLOW_EXPERIMENT_NAME:-Cricket_Commentary_Evaluation}
+      - GRAFANA_CLOUD_URL=${GRAFANA_CLOUD_URL:-}
     restart: unless-stopped
 
+  # Optional local sidecars (Used only for local testing, offloaded on AWS EC2)
   prometheus:
     image: prom/prometheus:v2.45.0
     container_name: commentary_prometheus
+    profiles:
+      - local-monitoring
     ports:
       - "9090:9090"
     volumes:
@@ -36,6 +39,8 @@ services:
   grafana:
     image: grafana/grafana:10.0.3
     container_name: commentary_grafana
+    profiles:
+      - local-monitoring
     ports:
       - "3000:3000"
     environment:
@@ -53,6 +58,8 @@ services:
   mlflow:
     image: ghcr.io/mlflow/mlflow:latest
     container_name: commentary_mlflow
+    profiles:
+      - local-monitoring
     ports:
       - "5001:5000"
     command: mlflow server --backend-store-uri sqlite:////mlflow/mlflow.db --default-artifact-root /mlflow/artifacts --host 0.0.0.0 --port 5000
