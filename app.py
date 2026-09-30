@@ -54,9 +54,7 @@ st.set_page_config(
 )
 
 # Start Prometheus Metrics Exporter
-if "metrics_started" not in st.session_state:
-    MetricsManager.start_exporter(8000)
-    st.session_state["metrics_started"] = True
+MetricsManager.start_exporter(8000)
 
 # Custom Broadcast Theme CSS
 st.markdown(
@@ -288,7 +286,7 @@ def complete_delivery_outcome():
             inning=snap.get("inning", 1),
             runs=snap.get("score", 190),
             wickets=snap.get("wickets", 5),
-            team=snap.get("batting_team", "ENG"),
+            team=snap.get("batting_team", "England"),
         )
 
         # 2. Retrieve the pre-generated package from Phase 1
@@ -913,35 +911,51 @@ with col_right:
         exp_name = AgentConfig.MLFLOW_EXPERIMENT_NAME
 
         # Observability Navigation Hub
-        mlflow_link = (
-            mlflow_url
-            if mlflow_url.startswith("http")
-            else "http://' + window.location.hostname + ':5001"
+        raw_mlflow = AgentConfig.MLFLOW_TRACKING_URI.strip()
+        if "dagshub.com" in raw_mlflow and raw_mlflow.endswith(".mlflow"):
+            mlflow_ui_link = raw_mlflow[:-7] + "/experiments"
+        elif raw_mlflow.startswith("http"):
+            mlflow_ui_link = raw_mlflow
+        else:
+            mlflow_ui_link = "http://localhost:5001"
+
+        grafana_ui_link = (
+            AgentConfig.GRAFANA_CLOUD_URL.strip()
+            if AgentConfig.GRAFANA_CLOUD_URL.strip()
+            else "http://localhost:3000"
         )
-        grafana_link = (
-            AgentConfig.GRAFANA_CLOUD_URL
-            if AgentConfig.GRAFANA_CLOUD_URL
-            else "http://' + window.location.hostname + ':3000"
-        )
+        prom_metrics_link = "http://localhost:8000/metrics"
 
         st.markdown(
             f"""
-            <div style="background: rgba(0, 240, 255, 0.08); border: 1px solid rgba(0, 240, 255, 0.35); border-radius: 8px; padding: 12px 16px; margin-bottom: 14px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <div style="background: rgba(0, 240, 255, 0.08); border: 1px solid rgba(0, 240, 255, 0.35); border-radius: 8px; padding: 14px 16px; margin-bottom: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                     <div>
-                        <div style="font-size: 0.88rem; font-weight: 800; color: #00F0FF;">📡 Observability & Tracking Hub</div>
-                        <div style="font-size: 0.76rem; color: #E2E8F0;">Experiment: <strong style="color:#FFD700;">{exp_name}</strong></div>
+                        <div style="font-size: 0.92rem; font-weight: 800; color: #00F0FF;">📡 Cloud Observability & LLM Evaluation Hub</div>
+                        <div style="font-size: 0.78rem; color: #E2E8F0;">Active Experiment: <strong style="color:#FFD700;">{exp_name}</strong></div>
                     </div>
-                </div>
-                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                    <a href="javascript:void(0)" onclick="window.open('{mlflow_link}', '_blank')" style="background: linear-gradient(90deg, #00F0FF, #00A3FF); color: #070B19; text-decoration: none; padding: 5px 12px; border-radius: 6px; font-weight: 800; font-size: 0.75rem;">🧪 MLflow Dashboard ↗</a>
-                    <a href="javascript:void(0)" onclick="window.open('{grafana_link}', '_blank')" style="background: rgba(255, 153, 0, 0.2); border: 1px solid #FF9900; color: #FF9900; text-decoration: none; padding: 5px 12px; border-radius: 6px; font-weight: 700; font-size: 0.75rem;">📊 Grafana Cloud / Metrics ↗</a>
-                    <a href="javascript:void(0)" onclick="window.open('http://' + window.location.hostname + ':8000/metrics', '_blank')" style="background: rgba(255, 255, 255, 0.1); border: 1px solid #A0AEC0; color: #E2E8F0; text-decoration: none; padding: 5px 12px; border-radius: 6px; font-weight: 700; font-size: 0.75rem;">⚙️ Prometheus /metrics (:8000) ↗</a>
                 </div>
             </div>
             """,
             unsafe_allow_html=True,
         )
+
+        btn_c1, btn_c2, btn_c3 = st.columns(3)
+        with btn_c1:
+            st.link_button(
+                "🧪 Open MLflow Dashboard",
+                url=mlflow_ui_link,
+                use_container_width=True,
+                type="primary",
+            )
+        with btn_c2:
+            st.link_button(
+                "📊 Grafana Cloud", url=grafana_ui_link, use_container_width=True
+            )
+        with btn_c3:
+            st.link_button(
+                "⚙️ /metrics Exporter", url=prom_metrics_link, use_container_width=True
+            )
 
         # Target SLA Cards
         sla_col1, sla_col2, sla_col3 = st.columns(3)

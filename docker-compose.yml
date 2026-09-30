@@ -20,12 +20,9 @@ services:
       - GRAFANA_CLOUD_URL=${GRAFANA_CLOUD_URL:-}
     restart: unless-stopped
 
-  # Optional local sidecars (Used only for local testing, offloaded on AWS EC2)
   prometheus:
     image: prom/prometheus:v2.45.0
     container_name: commentary_prometheus
-    profiles:
-      - local-monitoring
     ports:
       - "9090:9090"
     volumes:
@@ -39,8 +36,6 @@ services:
   grafana:
     image: grafana/grafana:10.0.3
     container_name: commentary_grafana
-    profiles:
-      - local-monitoring
     ports:
       - "3000:3000"
     environment:
@@ -53,16 +48,4 @@ services:
       - ./monitoring/grafana_dashboard.json:/var/lib/grafana/dashboards/dashboard.json
     depends_on:
       - prometheus
-    restart: unless-stopped
-
-  mlflow:
-    image: ghcr.io/mlflow/mlflow:latest
-    container_name: commentary_mlflow
-    profiles:
-      - local-monitoring
-    ports:
-      - "5001:5000"
-    command: mlflow server --backend-store-uri sqlite:////mlflow/mlflow.db --default-artifact-root /mlflow/artifacts --host 0.0.0.0 --port 5000
-    volumes:
-      - ./data/mlflow:/mlflow
     restart: unless-stopped

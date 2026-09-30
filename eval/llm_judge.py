@@ -48,15 +48,26 @@ class LLMJudgeEvaluator:
         fallback_uri = f"sqlite:///{local_db_path}"
 
         configured = False
-        # Try primary tracking URI if reachable (fast 0.15s check)
+        # Try primary tracking URI if reachable (fast 0.2s check)
         if primary_uri and primary_uri.startswith("http"):
             try:
                 import socket
                 from urllib.parse import urlparse
 
+                # Set tracking credentials if provided for hosted MLflow (e.g. DagsHub)
+                if AgentConfig.MLFLOW_TRACKING_USERNAME:
+                    os.environ["MLFLOW_TRACKING_USERNAME"] = (
+                        AgentConfig.MLFLOW_TRACKING_USERNAME
+                    )
+                if AgentConfig.MLFLOW_TRACKING_PASSWORD:
+                    os.environ["MLFLOW_TRACKING_PASSWORD"] = (
+                        AgentConfig.MLFLOW_TRACKING_PASSWORD
+                    )
+
                 parsed = urlparse(primary_uri)
+                target_port = parsed.port or (443 if parsed.scheme == "https" else 5000)
                 sock = socket.create_connection(
-                    (parsed.hostname or "localhost", parsed.port or 5000), timeout=0.15
+                    (parsed.hostname or "localhost", target_port), timeout=3.0
                 )
                 sock.close()
                 mlflow.set_tracking_uri(primary_uri)

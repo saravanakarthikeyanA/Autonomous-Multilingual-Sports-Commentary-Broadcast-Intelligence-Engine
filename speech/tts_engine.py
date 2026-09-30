@@ -342,6 +342,7 @@ class TTSEngine:
         if self.is_valid_speech_audio(dual_file):
             return dual_file, self.get_audio_duration(dual_file)
 
+        t_start = time.time()
         lead_path = self.synthesize_lead(lead_text, lang=lang_key)
         analyst_path = self.synthesize_analyst(analyst_text, lang=lang_key)
 
@@ -365,6 +366,7 @@ class TTSEngine:
             merged_data = np.concatenate([lead_data, pause_gap, analyst_data])
             sf.write(dual_file, merged_data, target_sr)
             total_dur = len(merged_data) / float(target_sr)
+            MetricsManager.record_tts_latency("dual_persona", time.time() - t_start)
             return dual_file, round(total_dur, 2)
         except Exception as e:  # noqa: BLE001
             print(f"[TTSEngine] Dual merge notice: {e}. Falling back to lead audio.")

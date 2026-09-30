@@ -4,5 +4,6 @@ global:
 
 scrape_configs:
   - job_name: "cricket_commentary_agents"
+    metrics_path: "/metrics"
     static_configs:
-      - targets: ["app:8000", "127.0.0.1:8000"]
+      - targets: ["app:8000"]

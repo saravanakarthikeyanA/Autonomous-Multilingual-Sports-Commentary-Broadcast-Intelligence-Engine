@@ -1,4 +1,29 @@
 {
+  "__inputs": [
+    {
+      "name": "DS_PROMETHEUS",
+      "label": "Prometheus",
+      "description": "Select Prometheus Data Source",
+      "type": "datasource",
+      "pluginId": "prometheus",
+      "pluginName": "Prometheus"
+    }
+  ],
+  "__elements": {},
+  "__requires": [
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "10.0.0"
+    },
+    {
+      "type": "datasource",
+      "id": "prometheus",
+      "name": "Prometheus",
+      "version": "1.0.0"
+    }
+  ],
   "annotations": {
     "list": []
   },
@@ -8,6 +33,7 @@
   "id": null,
   "links": [],
   "liveNow": true,
+  "refresh": "5s",
   "panels": [
     {
       "collapsed": false,
@@ -24,23 +50,22 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "histogram_quantile(0.95, sum(rate(commentary_generation_latency_seconds_bucket[15m])) by (le)) or (sum(commentary_generation_latency_seconds_sum) / sum(commentary_generation_latency_seconds_count)) or vector(0.45)",
-          "legendFormat": "p95 Latency (s)",
+          "expr": "histogram_quantile(0.95, sum(rate(commentary_generation_latency_seconds_bucket[5m])) by (le)) or (sum(commentary_generation_latency_seconds_sum) / sum(commentary_generation_latency_seconds_count))",
+          "legendFormat": "p95 Latency",
           "refId": "A"
         }
       ],
       "fieldConfig": {
         "defaults": {
           "unit": "s",
-          "noValue": "0.00s",
           "thresholds": {
             "mode": "absolute",
             "steps": [
               { "color": "green", "value": null },
-              { "color": "yellow", "value": 2.0 },
-              { "color": "red", "value": 5.0 }
+              { "color": "yellow", "value": 1.5 },
+              { "color": "red", "value": 4.0 }
             ]
           }
         }
@@ -61,17 +86,16 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "histogram_quantile(0.90, sum(rate(tts_synthesis_latency_seconds_bucket[15m])) by (le)) or (sum(tts_synthesis_latency_seconds_sum) / sum(tts_synthesis_latency_seconds_count)) or vector(0.38)",
-          "legendFormat": "TTS p90 (s)",
+          "expr": "histogram_quantile(0.90, sum(rate(tts_synthesis_latency_seconds_bucket[5m])) by (le)) or (sum(tts_synthesis_latency_seconds_sum) / sum(tts_synthesis_latency_seconds_count))",
+          "legendFormat": "TTS p90",
           "refId": "A"
         }
       ],
       "fieldConfig": {
         "defaults": {
           "unit": "s",
-          "noValue": "0.00s",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -92,24 +116,24 @@
         "y": 0
       },
       "id": 3,
-      "title": "Deliveries Streamed",
+      "title": "Faster-Whisper ASR Latency (Avg)",
       "type": "stat",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "sum(deliveries_processed_total) or vector(0)",
-          "legendFormat": "Deliveries",
+          "expr": "asr_transcription_latency_seconds_sum / asr_transcription_latency_seconds_count",
+          "legendFormat": "ASR Avg",
           "refId": "A"
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "noValue": "0",
+          "unit": "s",
           "color": {
-            "fixedColor": "#00F0FF",
+            "fixedColor": "#9B51E0",
             "mode": "fixed"
           }
         }
@@ -124,22 +148,84 @@
         "y": 0
       },
       "id": 4,
+      "title": "Fan Q&A Engine Latency (Avg)",
+      "type": "stat",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "qa_agent_latency_seconds_sum / qa_agent_latency_seconds_count",
+          "legendFormat": "Q&A Avg",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "color": {
+            "fixedColor": "#FFB800",
+            "mode": "fixed"
+          }
+        }
+      }
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 4
+      },
+      "id": 5,
+      "title": "Deliveries Streamed",
+      "type": "stat",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "sum(deliveries_processed_total)",
+          "legendFormat": "Deliveries",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "#00F0FF",
+            "mode": "fixed"
+          }
+        }
+      }
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 4
+      },
+      "id": 6,
       "title": "Viewer Questions Answered",
       "type": "stat",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "sum(qa_questions_total) or vector(0)",
+          "expr": "sum(qa_questions_total)",
           "legendFormat": "Q&A Total",
           "refId": "A"
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "noValue": "0",
           "color": {
             "fixedColor": "#38EF7D",
             "mode": "fixed"
@@ -150,176 +236,31 @@
     {
       "collapsed": false,
       "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 4
-      },
-      "id": 5,
-      "title": "Agent & Speech Latency Over Time",
-      "type": "timeseries",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "rate(commentary_generation_latency_seconds_sum[5m]) / rate(commentary_generation_latency_seconds_count[5m]) or (commentary_generation_latency_seconds_sum / commentary_generation_latency_seconds_count)",
-          "legendFormat": "{{agent_type}} Latency (Avg)",
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "rate(tts_synthesis_latency_seconds_sum[5m]) / rate(tts_synthesis_latency_seconds_count[5m]) or (tts_synthesis_latency_seconds_sum / tts_synthesis_latency_seconds_count)",
-          "legendFormat": "TTS ({{persona}})",
-          "refId": "B"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "rate(qa_agent_latency_seconds_sum[5m]) / rate(qa_agent_latency_seconds_count[5m]) or (qa_agent_latency_seconds_sum / qa_agent_latency_seconds_count)",
-          "legendFormat": "Fan Q&A Latency",
-          "refId": "C"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "s",
-          "custom": {
-            "spanNulls": true
-          }
-        }
-      }
-    },
-    {
-      "collapsed": false,
-      "gridPos": {
-        "h": 8,
-        "w": 12,
+        "h": 4,
+        "w": 6,
         "x": 12,
         "y": 4
       },
-      "id": 6,
-      "title": "Live Match Runs & Wickets Progression",
-      "type": "timeseries",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "current_match_runs{team=\"England\"}",
-          "legendFormat": "England Runs",
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "current_match_wickets{team=\"England\"}",
-          "legendFormat": "England Wickets",
-          "refId": "B"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "spanNulls": true
-          }
-        }
-      }
-    },
-    {
-      "collapsed": false,
-      "gridPos": {
-        "h": 6,
-        "w": 8,
-        "x": 0,
-        "y": 12
-      },
       "id": 7,
-      "title": "Guardrail Interceptions & Reflection Loops",
-      "type": "timeseries",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "increase(guardrail_violations_total[5m]) or vector(0)",
-          "legendFormat": "Hallucinations Corrected",
-          "refId": "A"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "spanNulls": true
-          }
-        }
-      }
-    },
-    {
-      "collapsed": false,
-      "gridPos": {
-        "h": 6,
-        "w": 8,
-        "x": 8,
-        "y": 12
-      },
-      "id": 8,
-      "title": "LLM Dynamic Model Pool Failovers",
-      "type": "timeseries",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "increase(llm_model_failovers_total[5m]) or vector(0)",
-          "legendFormat": "{{from_model}} -> {{to_model}}",
-          "refId": "A"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "spanNulls": true
-          }
-        }
-      }
-    },
-    {
-      "collapsed": false,
-      "gridPos": {
-        "h": 6,
-        "w": 8,
-        "x": 16,
-        "y": 12
-      },
-      "id": 9,
       "title": "Active Broadcast Commentary Language",
       "type": "stat",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${DS_PROMETHEUS}"
           },
           "expr": "broadcast_active_language == 1",
-          "legendFormat": "Active: {{language}}",
+          "legendFormat": "{{language}}",
           "refId": "A"
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "noValue": "en",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#38EF7D"
+          },
           "mappings": [
             {
               "type": "value",
@@ -331,6 +272,240 @@
               }
             }
           ]
+        }
+      }
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 4
+      },
+      "id": 8,
+      "title": "Multi-Agent System Errors",
+      "type": "stat",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "sum(agent_errors_total)",
+          "legendFormat": "Errors",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "#2ECC71",
+            "mode": "fixed"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 1.0 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "id": 9,
+      "title": "Agent & Speech Latency Over Time",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "commentary_generation_latency_seconds_sum / commentary_generation_latency_seconds_count",
+          "legendFormat": "{{agent_type}} LLM",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "tts_synthesis_latency_seconds_sum / tts_synthesis_latency_seconds_count",
+          "legendFormat": "TTS ({{persona}})",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "qa_agent_latency_seconds_sum / qa_agent_latency_seconds_count",
+          "legendFormat": "Fan Q&A Engine",
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "asr_transcription_latency_seconds_sum / asr_transcription_latency_seconds_count",
+          "legendFormat": "Faster-Whisper ASR",
+          "refId": "D"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "showPoints": "auto",
+            "spanNulls": true
+          }
+        }
+      }
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "id": 10,
+      "title": "Live Match Runs & Wickets Progression",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "current_match_runs",
+          "legendFormat": "{{team}} Runs",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "current_match_wickets",
+          "legendFormat": "{{team}} Wickets",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "showPoints": "auto",
+            "spanNulls": true
+          }
+        }
+      }
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 0,
+        "y": 16
+      },
+      "id": 11,
+      "title": "Guardrail Interceptions & Reflection Loops",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "guardrail_violations_total",
+          "legendFormat": "Hallucinations Intercepted",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "bars",
+            "spanNulls": true
+          }
+        }
+      }
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 8,
+        "y": 16
+      },
+      "id": 12,
+      "title": "LLM Dynamic Model Pool Failovers",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "sum(llm_model_failovers_total) by (from_model, to_model)",
+          "legendFormat": "{{from_model}} -> {{to_model}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "bars",
+            "spanNulls": true
+          }
+        }
+      }
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 16,
+        "y": 16
+      },
+      "id": 13,
+      "title": "Q&A Request Breakdown (Text vs Voice)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "qa_questions_total",
+          "legendFormat": "Input Mode: {{input_type}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "bars",
+            "spanNulls": true
+          }
         }
       }
     }

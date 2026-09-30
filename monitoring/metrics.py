@@ -21,7 +21,7 @@ if PROMETHEUS_AVAILABLE:
     )
     TTS_LATENCY = Histogram(
         "tts_synthesis_latency_seconds",
-        "Latency in seconds for Kokoro-82M TTS synthesis",
+        "Latency in seconds for Multilingual Neural TTS synthesis",
         ["persona"],
     )
     ASR_LATENCY = Histogram(
@@ -83,13 +83,10 @@ class MetricsManager:
             COMMENTARY_LATENCY.labels(agent_type="lead_commentator").observe(0.45)
             COMMENTARY_LATENCY.labels(agent_type="color_analyst").observe(0.52)
 
-            # Active multilingual personas (EN / TA / HI)
-            TTS_LATENCY.labels(persona="ravi_shastri").observe(0.38)
-            TTS_LATENCY.labels(persona="nasser_hussain").observe(0.35)
-            TTS_LATENCY.labels(persona="k_srikkanth").observe(0.42)
-            TTS_LATENCY.labels(persona="sadagoppan_ramesh").observe(0.40)
-            TTS_LATENCY.labels(persona="navjot_sidhu").observe(0.39)
-            TTS_LATENCY.labels(persona="akash_chopra").observe(0.36)
+            # Active personas matching TTS engine
+            TTS_LATENCY.labels(persona="lead").observe(0.38)
+            TTS_LATENCY.labels(persona="analyst").observe(0.35)
+            TTS_LATENCY.labels(persona="dual_persona").observe(0.62)
 
             ASR_LATENCY.observe(0.40)
             QA_LATENCY.observe(0.85)
@@ -97,6 +94,9 @@ class MetricsManager:
             QA_QUESTIONS_TOTAL.labels(input_type="voice").inc(0)
             GUARDRAIL_VIOLATIONS.inc(0)
             MODEL_FAILOVERS.labels(from_model="primary", to_model="fallback").inc(0)
+            AGENT_ERRORS.labels(agent_name="lead_commentator").inc(0)
+            AGENT_ERRORS.labels(agent_name="color_analyst").inc(0)
+            AGENT_ERRORS.labels(agent_name="qa_agent").inc(0)
             cls.set_active_language("en")
 
     @classmethod
@@ -168,6 +168,11 @@ class MetricsManager:
     def record_model_failover(from_model: str, to_model: str) -> None:
         if PROMETHEUS_AVAILABLE:
             MODEL_FAILOVERS.labels(from_model=from_model, to_model=to_model).inc()
+
+    @staticmethod
+    def record_agent_error(agent_name: str) -> None:
+        if PROMETHEUS_AVAILABLE:
+            AGENT_ERRORS.labels(agent_name=agent_name).inc()
 
     @staticmethod
     def set_active_language(language: str) -> None:

@@ -83,38 +83,21 @@ class CommentaryAgentGraph:
             except Exception as e:  # noqa: BLE001
                 print(f"[AgentGraph] Warning initializing Groq client: {e}")
 
-        # Initialize MLflow GenAI Tracing & Experiment tracking (Fast Non-Blocking)
+        # Initialize MLflow GenAI Tracing & Experiment tracking
         if MLFLOW_AVAILABLE:
             try:
                 base_dir = os.path.abspath(
                     os.path.join(os.path.dirname(__file__), "..")
                 )
                 local_db = os.path.join(base_dir, "data", "mlflow", "mlflow.db")
+                os.makedirs(os.path.dirname(local_db), exist_ok=True)
                 fallback_uri = f"sqlite:///{local_db}"
 
                 target_uri = (
-                    os.getenv("MLFLOW_TRACKING_URI", "").strip() or fallback_uri
+                    os.getenv("MLFLOW_TRACKING_URI", "").strip()
+                    or AgentConfig.MLFLOW_TRACKING_URI.strip()
+                    or fallback_uri
                 )
-                if target_uri.startswith("http"):
-                    # Fast socket check (0.2s) to prevent blocking Streamlit startup if server is down
-                    import socket
-                    from urllib.parse import urlparse
-
-                    parsed = urlparse(target_uri)
-                    target_port = parsed.port or (
-                        443 if parsed.scheme == "https" else 5000
-                    )
-                    try:
-                        sock = socket.create_connection(
-                            (parsed.hostname or "localhost", target_port),
-                            timeout=0.2,
-                        )
-                        sock.close()
-                        mlflow.set_tracking_uri(target_uri)
-                    except Exception:  # noqa: BLE001
-                        mlflow.set_tracking_uri(fallback_uri)
-                else:
-                    mlflow.set_tracking_uri(fallback_uri)
 
                 # Set tracking credentials if provided for hosted MLflow (e.g. DagsHub)
                 if AgentConfig.MLFLOW_TRACKING_USERNAME:
@@ -126,8 +109,33 @@ class CommentaryAgentGraph:
                         AgentConfig.MLFLOW_TRACKING_PASSWORD
                     )
 
+                if target_uri.startswith("http"):
+                    import socket
+                    from urllib.parse import urlparse
+
+                    parsed = urlparse(target_uri)
+                    target_port = parsed.port or (
+                        443 if parsed.scheme == "https" else 5000
+                    )
+                    try:
+                        sock = socket.create_connection(
+                            (parsed.hostname or "localhost", target_port),
+                            timeout=3.0,
+                        )
+                        sock.close()
+                        mlflow.set_tracking_uri(target_uri)
+                        print(
+                            f"[AgentGraph] MLflow tracking connected to remote URI: {target_uri}"
+                        )
+                    except Exception as conn_err:  # noqa: BLE001
+                        print(
+                            f"[AgentGraph] Remote MLflow ({target_uri}) unreachable ({conn_err}). Falling back to local SQLite."
+                        )
+                        mlflow.set_tracking_uri(fallback_uri)
+                else:
+                    mlflow.set_tracking_uri(fallback_uri)
+
                 mlflow.set_experiment(AgentConfig.MLFLOW_EXPERIMENT_NAME)
-                mlflow.langchain.autolog(log_models=False)
             except Exception as err:  # noqa: BLE001
                 try:
                     local_db = os.path.abspath(
@@ -531,7 +539,7 @@ class CommentaryAgentGraph:
     def process_delivery_event(
         self, delivery: dict[str, Any], state: dict[str, Any], lang: str = "en"
     ) -> dict[str, Any]:
-        """Invokes the compiled LangGraph StateGraph pipeline for a delivery event."""
+        """Invokes the compiled LangGraph StateGraph pipeline for a delivery event with GenAI tracing."""
         lang_key = self._normalize_lang(lang)
         initial_state: CommentaryState = {
             "delivery": delivery,
@@ -542,8 +550,40 @@ class CommentaryAgentGraph:
             "correction_critique": "",
         }
 
-        # Execute LangGraph Compiled StateGraph
-        final_state = self.commentary_graph.invoke(initial_state)
+        # Execute LangGraph StateGraph with MLflow GenAI Tracing if active
+        if MLFLOW_AVAILABLE and hasattr(mlflow, "start_span"):
+            try:
+                over_ball = f"{delivery.get('over', 0)}.{delivery.get('ball', 0)}"
+                with mlflow.start_span(
+                    name=f"Commentary_Delivery_{over_ball}_{lang_key.upper()}",
+                    span_type="AGENT",
+                ) as span:
+                    span.set_inputs(
+                        {
+                            "ball": over_ball,
+                            "striker": delivery.get("batter", ""),
+                            "bowler": delivery.get("bowler", ""),
+                            "runs": delivery.get("runs_total", 0),
+                            "is_wicket": delivery.get("is_wicket", False),
+                            "language": lang_key,
+                        }
+                    )
+                    final_state = self.commentary_graph.invoke(initial_state)
+                    span.set_outputs(
+                        {
+                            "lead_commentary": final_state.get("lead_commentary", ""),
+                            "analyst_commentary": final_state.get(
+                                "analyst_commentary", ""
+                            ),
+                            "guardrail_passed": final_state.get(
+                                "guardrail_passed", True
+                            ),
+                        }
+                    )
+            except Exception:
+                final_state = self.commentary_graph.invoke(initial_state)
+        else:
+            final_state = self.commentary_graph.invoke(initial_state)
 
         return {
             "delivery": delivery,
@@ -583,7 +623,7 @@ class CommentaryAgentGraph:
         lang: str = "en",
         session_deliveries: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
-        """Invokes the compiled LangGraph Q&A StateGraph for viewer question."""
+        """Invokes the compiled LangGraph Q&A StateGraph for viewer question with GenAI tracing."""
         lang_key = self._normalize_lang(lang)
         initial_state: QAState = {
             "question": question,
@@ -592,8 +632,31 @@ class CommentaryAgentGraph:
             "session_deliveries": session_deliveries or [],
         }
 
-        # Execute LangGraph Q&A Graph
-        final_state = self.qa_graph.invoke(initial_state)
+        # Execute LangGraph Q&A Graph with MLflow GenAI Tracing
+        if MLFLOW_AVAILABLE and hasattr(mlflow, "start_span"):
+            try:
+                with mlflow.start_span(
+                    name=f"Viewer_QA_{lang_key.upper()}",
+                    span_type="AGENT",
+                ) as span:
+                    span.set_inputs(
+                        {
+                            "question": question,
+                            "language": lang_key,
+                            "match_score": f"{state.get('score', 0)}/{state.get('wickets', 0)}",
+                        }
+                    )
+                    final_state = self.qa_graph.invoke(initial_state)
+                    span.set_outputs(
+                        {
+                            "answer": final_state.get("answer", ""),
+                            "latency_sec": final_state.get("latency_sec", 0.0),
+                        }
+                    )
+            except Exception:
+                final_state = self.qa_graph.invoke(initial_state)
+        else:
+            final_state = self.qa_graph.invoke(initial_state)
 
         return {
             "question": question,
