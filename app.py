@@ -746,8 +746,20 @@ with col_right:
                         "🎧 Transcribing live speech with multilingual Whisper..."
                     ):
                         t_asr = time.time()
+                        ext = ".wav"
+                        if hasattr(live_audio, "name") and live_audio.name:
+                            _, f_ext = os.path.splitext(live_audio.name)
+                            if f_ext:
+                                ext = f_ext
+                        elif hasattr(live_audio, "type") and live_audio.type:
+                            if "webm" in live_audio.type:
+                                ext = ".webm"
+                            elif "ogg" in live_audio.type:
+                                ext = ".ogg"
+                            elif "mp3" in live_audio.type:
+                                ext = ".mp3"
                         transcribed_text = asr.transcribe_bytes(
-                            audio_bytes, language=active_lang
+                            audio_bytes, language=active_lang, file_ext=ext
                         )
                         MetricsManager.record_asr_latency(time.time() - t_asr)
 
